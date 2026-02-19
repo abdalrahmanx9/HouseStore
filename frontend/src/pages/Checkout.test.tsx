@@ -1,13 +1,13 @@
-import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '../test-utils'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Checkout from './Checkout'
-import { MemoryRouter } from 'react-router-dom'
+import axios from 'axios'
+import '../setupTests'
 
-// Mocking useCart to simulate items in cart
+// Mocking useCart
 const mockCart = [
   { id: 1, name: 'Test Product', price: 100, category: 'Test', quantity: 1 }
 ]
-
 const mockClearCart = vi.fn()
 
 vi.mock('../context/CartContext', async () => {
@@ -22,32 +22,74 @@ vi.mock('../context/CartContext', async () => {
   }
 })
 
+// Mocking useAuth
+vi.mock('../context/AuthContext', async () => {
+  const actual = await vi.importActual('../context/AuthContext')
+  const mockUser = { email: 'test@example.com', full_name: 'Test User' }
+  return {
+    ...actual,
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    useAuth: () => ({
+      user: mockUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+    })
+  }
+})
+
+// Mock axios
+vi.mock('axios', () => ({
+    default: {
+        post: vi.fn(),
+        get: vi.fn(),
+        create: vi.fn().mockReturnThis(),
+        interceptors: {
+            request: { use: vi.fn(), eject: vi.fn() },
+            response: { use: vi.fn(), eject: vi.fn() }
+        }
+    }
+}))
+
 describe('Checkout Page', () => {
-  it('renders checkout form', () => {
-    // Red: Checkout component doesn't exist
-    render(
-      <MemoryRouter>
-        <Checkout />
-      </MemoryRouter>
-    )
-    
-    expect(screen.getByText('Checkout')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Full Name')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument()
-    expect(screen.getByText('Place Order')).toBeInTheDocument()
+  beforeEach(() => {
+    vi.clearAllMocks()
+    ;(axios.post as any).mockResolvedValue({ data: { id: 123, status: 'pending' } })
+    ;(axios.get as any).mockResolvedValue({ data: {} })
   })
 
-  it('validates form inputs', async () => {
-    render(
-      <MemoryRouter>
-        <Checkout />
-      </MemoryRouter>
-    )
+  it('renders checkout form', () => {
+    render(<Checkout />)
+    
+    expect(screen.getByText('Checkout')).toBeInTheDocument()
+    // It mocks useAuth/useCart so it should render form
+    // Check for "Order Summary"
+    expect(screen.getByText('Order Summary')).toBeInTheDocument()
+    // Check for total (might appear multiple times: subtotal, total)
+    expect(screen.getAllByText(/EGP 100/)[0]).toBeInTheDocument()
+  })
+
+  it('submits order successfully', async () => {
+    // Mock user interaction
+    render(<Checkout />)
+
+    // Fill form
+    fireEvent.change(screen.getByPlaceholderText('Full Name'), { target: { value: 'John Doe' } })
+    fireEvent.change(screen.getByPlaceholderText('Email Address'), { target: { value: 'john@example.com' } })
+    
+    // Upload file (mock)
+    const file = new File(['dummy content'], 'proof.png', { type: 'image/png' })
+    const fileInput = screen.getByLabelText(/Payment Proof/i)
+    fireEvent.change(fileInput, { target: { files: [file] } })
 
     const submitBtn = screen.getByText('Place Order')
     fireEvent.click(submitBtn)
 
-    // Expect validation errors (HTML5 validation or custom)
-    // For simplicity, let's assume valid form submission first
+    await waitFor(() => {
+        expect(axios.post).toHaveBeenCalledTimes(1)
+        expect(mockClearCart).toHaveBeenCalled()
+        expect(window.alert).toHaveBeenCalledWith('Order placed successfully!')
+    })
   })
 })
