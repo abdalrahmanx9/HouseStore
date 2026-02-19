@@ -27,9 +27,9 @@ export default function LoginPage() {
         await axios.post('/api/v1/auth/manual-login', params, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
-        // Force reload to get auth state or use context
-        // Ideally we fetchMe() - for now, clear reload works
-        window.location.href = '/dashboard' 
+        const meRes = await axios.get('/api/v1/auth/me')
+        const user = meRes.data
+        window.location.href = user.is_superuser ? '/admin' : '/dashboard' 
       } else {
         // Register
         await axios.post('/api/v1/auth/register', {
