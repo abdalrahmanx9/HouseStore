@@ -4,17 +4,13 @@ import axios from 'axios'
 import { ArrowLeft, Check, X } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 
-interface Product {
-  id: number
-  name: string
-  price: number
-  category: string
-  stock_count: number
-  description?: string
-  subcategory?: string
-  delivery_type?: string
-  is_active?: boolean
-}
+import type { Review } from '../types'
+import ReviewList from '../components/ReviewList'
+import ReviewForm from '../components/ReviewForm'
+import { useAuth } from '../context/AuthContext'
+
+// Product interface removed (imported from types if needed, or we just rely on response type)
+import type { Product } from '../types'
 
 const fetchProduct = async (id: string): Promise<Product> => {
   const response = await axios.get(`/api/v1/products/${id}`)
@@ -30,6 +26,19 @@ export default function ProductDetail() {
     queryFn: () => fetchProduct(id!),
     enabled: !!id,
   })
+
+  const { data: reviews } = useQuery<Review[]>({
+    queryKey: ['reviews', id],
+    queryFn: async () => {
+        const res = await axios.get(`/api/v1/reviews/product/${id}`)
+        return res.data
+    },
+    enabled: !!id,
+  })
+
+  const { user } = useAuth()
+
+
 
   if (isLoading) {
     return (
@@ -114,6 +123,24 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+      </div>
+
+
+      {/* Reviews Section */}
+      <div className="mt-12 max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Customer Reviews</h2>
+          
+          {user ? (
+              <ReviewForm productId={product.id} />
+          ) : (
+              <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg mb-8 text-center border border-gray-200 dark:border-gray-700">
+                  <p className="text-gray-600 dark:text-gray-400">
+                      Please <Link to="/login" className="text-blue-600 hover:text-blue-500 font-semibold hover:underline">log in</Link> to write a review.
+                  </p>
+              </div>
+          )}
+          
+          <ReviewList reviews={reviews || []} />
       </div>
     </div>
   )

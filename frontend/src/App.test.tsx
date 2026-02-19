@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen } from './test-utils'
 import './setupTests'
 import App from './App'
 import { describe, it, expect, vi } from 'vitest' // Explicit import for clarity, though globals: true
@@ -10,19 +10,9 @@ vi.mock('./pages/ProductList', () => ({ default: () => <div>ProductList Mock</di
 vi.mock('./pages/Login', () => ({ default: () => <div>Login Mock</div> }))
 vi.mock('./pages/ProductDetail', () => ({ default: () => <div>ProductDetail Mock</div> }))
 
-const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } }
-})
-
 describe('App', () => {
   it('renders the store title on home route', async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/']}>
-            <App />
-        </MemoryRouter>
-      </QueryClientProvider>
-    )
+    render(<App />)
     // Expect the mock to be rendered
     expect(await screen.findByText('ProductList Mock')).toBeInTheDocument()
     // Check for title as well if it's still part of App layout? 

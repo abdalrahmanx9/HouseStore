@@ -12,9 +12,8 @@ from app.models.base import Base
 # For now, we use the local docker DB since it's dev-only.
 # In a real CI, we'd spin up a fresh service.
 
-# Removed custom event_loop fixture to avoid conflicts with pytest-asyncio auto mode
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def db_engine():
     engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, future=True)
     # Create tables
@@ -25,16 +24,22 @@ async def db_engine():
     #     await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
 
+
 @pytest.fixture(scope="function")
 async def db(db_engine) -> AsyncGenerator[AsyncSession, None]:
-    async_session = async_sessionmaker(db_engine, expire_on_commit=False, class_=AsyncSession)
+    async_session = async_sessionmaker(
+        db_engine, expire_on_commit=False, class_=AsyncSession
+    )
     async with async_session() as session:
         yield session
         await session.rollback()
 
+
 @pytest.fixture(scope="function")
 async def client(db) -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides[get_db] = lambda: db
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as c:
         yield c
     app.dependency_overrides.clear()

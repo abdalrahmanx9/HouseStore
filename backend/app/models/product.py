@@ -1,7 +1,17 @@
-from sqlalchemy import Column, Integer, String, Float, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    Text,
+    Boolean,
+    DateTime,
+    ForeignKey,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.models.base import Base
+
 
 class Product(Base):
     __tablename__ = "store_products"
@@ -17,14 +27,22 @@ class Product(Base):
     terms = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
 
-    stock_items = relationship("StockItem", back_populates="product", cascade="all, delete-orphan")
+    stock_items = relationship(
+        "StockItem", back_populates="product", cascade="all, delete-orphan"
+    )
     orders = relationship("Order", back_populates="product")
+    reviews = relationship(
+        "Review", back_populates="product", cascade="all, delete-orphan"
+    )
+
 
 class StockItem(Base):
     __tablename__ = "store_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    product_id = Column(Integer, ForeignKey("store_products.id"), nullable=False, index=True)
+    product_id = Column(
+        Integer, ForeignKey("store_products.id"), nullable=False, index=True
+    )
     content = Column(Text, nullable=False)
     is_sold = Column(Boolean, default=False, index=True)
     added_at = Column(DateTime(timezone=True), server_default=func.now())
