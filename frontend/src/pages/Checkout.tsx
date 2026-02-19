@@ -126,8 +126,9 @@ export default function Checkout() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                 <input 
+                    id="full-name"
                     type="text" 
                     required
                     placeholder="Full Name"
@@ -138,8 +139,9 @@ export default function Checkout() {
             </div>
             
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                 <input 
+                    id="email"
                     type="email" 
                     required
                     placeholder="Email Address"
@@ -150,8 +152,9 @@ export default function Checkout() {
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
+                <label htmlFor="payment-method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
                 <select 
+                    id="payment-method"
                     className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     value={formData.paymentMethod}
                     onChange={e => setFormData({...formData, paymentMethod: e.target.value})}
@@ -162,8 +165,9 @@ export default function Checkout() {
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Proof (Screenshot)</label>
+                <label htmlFor="payment-proof" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Proof (Screenshot)</label>
                 <input 
+                    id="payment-proof"
                     type="file" 
                     accept="image/*"
                     required

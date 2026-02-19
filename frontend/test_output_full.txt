@@ -1,0 +1,117 @@
+
+> frontend@0.0.0 test
+> vitest --run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/abdulrahman/Desktop/MyWork/DiscordBots/StoreWeb/frontend[39m
+
+ [32m✓[39m src/minimal.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+[90mstdout[2m | src/context/CartContext.test.tsx[2m > [22m[2mCart Context[2m > [22m[2madds items to cart and updates total
+[22m[39mAdding to cart: { id: [33m1[39m, name: [32m'Test Product'[39m, price: [33m100[39m, category: [32m'Test'[39m }
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mdata-testid[39m=[32m"cart-count"[39m
+      [36m>[39m
+        [0m1[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mdata-testid[39m=[32m"cart-total"[39m
+      [36m>[39m
+        [0m100[0m
+      [36m</div>[39m
+      [36m<button>[39m
+        [0mAdd Product 1[0m
+      [36m</button>[39m
+      [36m<button>[39m
+        [0mRemove Product 1[0m
+      [36m</button>[39m
+      [36m<button>[39m
+        [0mClear Cart[0m
+      [36m</button>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+ [32m✓[39m src/context/CartContext.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 41[2mms[22m[39m
+[90mstdout[2m | src/pages/ProductDetail.test.tsx[2m > [22m[2mProduct Detail Page[2m > [22m[2mrenders product details after fetch
+[22m[39mAuthContext: User fetched {}
+
+ [32m✓[39m src/App.minimal.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/pages/ProductDetail.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 68[2mms[22m[39m
+[90mstdout[2m | src/context/AuthContext.test.tsx[2m > [22m[2mAuthContext[2m > [22m[2mfetches user on mount
+[22m[39mAuthContext: User fetched { email: [32m'test@example.com'[39m, name: [32m'Test User'[39m }
+
+[90mstderr[2m | src/context/AuthContext.test.tsx[2m > [22m[2mAuthContext[2m > [22m[2mhandles 401 (not logged in)
+[22m[39mAuthContext: Fetch failed { response: { status: [33m401[39m } }
+
+ [32m✓[39m src/context/AuthContext.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m src/pages/Login.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 218[2mms[22m[39m
+ [31m❯[39m src/components/Layout.test.tsx [2m([22m[2m3 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 32[2mms[22m[39m
+[31m     [31m×[31m renders Login button when user is null[39m[32m 24[2mms[22m[39m
+[31m     [31m×[31m renders Dashboard link when user is logged in[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m renders Admin link when user is superuser[39m[32m 3[2mms[22m[39m
+[90mstdout[2m | src/pages/ProductList.test.tsx[2m > [22m[2mProduct List Page[2m > [22m[2mrenders products after fetch
+[22m[39mAuthContext: User fetched [
+  {
+    id: [33m1[39m,
+    name: [32m'Elden Ring'[39m,
+    price: [33m60[39m,
+    category: [32m'Gaming'[39m,
+    stock_count: [33m5[39m
+  },
+  {
+    id: [33m2[39m,
+    name: [32m'Netflix'[39m,
+    price: [33m10[39m,
+    category: [32m'Streaming'[39m,
+    stock_count: [33m100[39m
+  }
+]
+
+ [32m✓[39m src/components/ProtectedRoute.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+[90mstdout[2m | src/pages/ProductList.test.tsx[2m > [22m[2mProduct List Page[2m > [22m[2mrenders empty state if no products
+[22m[39mAuthContext: User fetched []
+
+ [32m✓[39m src/pages/ProductList.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+[90mstdout[2m | src/pages/Checkout.test.tsx[2m > [22m[2mCheckout Page[2m > [22m[2msubmits order successfully
+[22m[39mOrder created: { id: [33m123[39m, status: [32m'pending'[39m }
+
+ [32m✓[39m src/pages/Checkout.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 477[2mms[22m[39m
+     [33m[2m✓[22m[39m submits order successfully [33m 427[2mms[22m[39m
+ [31m❯[39m src/App.test.tsx [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 19[2mms[22m[39m
+[31m     [31m×[31m renders the store title on home route[39m[32m 18[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 4 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/App.test.tsx[2m > [22mApp[2m > [22mrenders the store title on home route
+[41m[1m FAIL [22m[49m src/components/Layout.test.tsx[2m > [22mLayout Component[2m > [22mrenders Login button when user is null
+[41m[1m FAIL [22m[49m src/components/Layout.test.tsx[2m > [22mLayout Component[2m > [22mrenders Dashboard link when user is logged in
+[41m[1m FAIL [22m[49m src/components/Layout.test.tsx[2m > [22mLayout Component[2m > [22mrenders Admin link when user is superuser
+[31m[1mTypeError[22m: window.matchMedia is not a function[39m
+[36m [2m❯[22m src/components/Layout.tsx:[2m15:98[22m[39m
+    [90m 13| [39m  [35mconst[39m [isDark[33m,[39m setIsDark] [33m=[39m [34museState[39m(() [33m=>[39m {
+    [90m 14| [39m    [35mif[39m ([35mtypeof[39m window [33m!==[39m [32m'undefined'[39m) {
+    [90m 15| [39m        return localStorage.getItem('theme') === 'dark' || (!('theme' …
+    [90m   | [39m                                                                                                 [31m^[39m
+    [90m 16| [39m    }
+    [90m 17| [39m    [35mreturn[39m [35mtrue[39m [90m// Default to dark[39m
+[90m [2m❯[22m mountStateImpl node_modules/react-dom/cjs/react-dom-client.development.js:[2m8268:24[22m[39m
+[90m [2m❯[22m mountState node_modules/react-dom/cjs/react-dom-client.development.js:[2m8289:22[22m[39m
+[90m [2m❯[22m Object.useState node_modules/react-dom/cjs/react-dom-client.development.js:[2m26243:18[22m[39m
+[90m [2m❯[22m process.env.NODE_ENV.exports.useState node_modules/react/cjs/react.development.js:[2m1263:34[22m[39m
+[90m [2m❯[22m Layout src/components/Layout.tsx:[2m13:31[22m[39m
+[90m [2m❯[22m Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:[2m25904:20[22m[39m
+[90m [2m❯[22m renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:[2m7662:22[22m[39m
+[90m [2m❯[22m updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:[2m10166:19[22m[39m
+[90m [2m❯[22m beginWork node_modules/react-dom/cjs/react-dom-client.development.js:[2m11778:18[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 22:15:55
+[2m   Duration [22m 3.27s[2m (transform 953ms, setup 2.30s, import 4.54s, tests 1.03s, environment 21.48s)[22m
+

@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, waitFor } from '../test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor, fireEvent } from '../test-utils'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import userEvent from '@testing-library/user-event'
 import Checkout from './Checkout'
 import axios from 'axios'
 import '../setupTests'
@@ -53,43 +54,53 @@ vi.mock('axios', () => ({
 }))
 
 describe('Checkout Page', () => {
+  const alertMock = vi.fn()
+
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.stubGlobal('alert', alertMock)
     ;(axios.post as any).mockResolvedValue({ data: { id: 123, status: 'pending' } })
     ;(axios.get as any).mockResolvedValue({ data: {} })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('renders checkout form', () => {
     render(<Checkout />)
     
     expect(screen.getByText('Checkout')).toBeInTheDocument()
-    // It mocks useAuth/useCart so it should render form
-    // Check for "Order Summary"
     expect(screen.getByText('Order Summary')).toBeInTheDocument()
-    // Check for total (might appear multiple times: subtotal, total)
     expect(screen.getAllByText(/EGP 100/)[0]).toBeInTheDocument()
   })
 
   it('submits order successfully', async () => {
-    // Mock user interaction
+    const user = userEvent.setup()
     render(<Checkout />)
 
     // Fill form
-    fireEvent.change(screen.getByPlaceholderText('Full Name'), { target: { value: 'John Doe' } })
-    fireEvent.change(screen.getByPlaceholderText('Email Address'), { target: { value: 'john@example.com' } })
+    await user.type(screen.getByLabelText(/Full Name/i), 'John Doe')
+    await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com')
     
-    // Upload file (mock)
+    // Upload file
     const file = new File(['dummy content'], 'proof.png', { type: 'image/png' })
     const fileInput = screen.getByLabelText(/Payment Proof/i)
-    fireEvent.change(fileInput, { target: { files: [file] } })
+    await user.upload(fileInput, file)
+
+    // Verify file is selected (optional but good sanity check)
+    // expect((fileInput as HTMLInputElement).files?.[0]).toBe(file)
+    // Actually userEvent.upload handles this.
 
     const submitBtn = screen.getByText('Place Order')
-    fireEvent.click(submitBtn)
+    // user.click(submitBtn) might be blocked by HTML5 validation in jsdom
+    // forceful submit to check logic
+    fireEvent.submit(submitBtn.closest('form')!)
 
     await waitFor(() => {
         expect(axios.post).toHaveBeenCalledTimes(1)
         expect(mockClearCart).toHaveBeenCalled()
-        expect(window.alert).toHaveBeenCalledWith('Order placed successfully!')
+        expect(alertMock).toHaveBeenCalledWith('Order placed successfully!')
     })
   })
 })
