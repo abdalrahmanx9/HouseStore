@@ -1,11 +1,23 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, useEffect } from 'react'
 import { useCart } from '../context/CartContext'
-import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
 
 export default function Checkout() {
   const { cart, total, clearCart } = useCart()
+  const { user, isLoading: loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const coupon = location.state?.coupon as { code: string, discount_percent: number, max_discount_amount?: number } | undefined
+  
+  // total is already destructured from useCart()
+  const calculatedDiscount = coupon ? (total * coupon.discount_percent / 100) : 0
+  const discountAmount = coupon?.max_discount_amount
+    ? Math.min(calculatedDiscount, coupon.max_discount_amount)
+    : calculatedDiscount
+  const finalTotal = total - discountAmount
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -14,9 +26,31 @@ export default function Checkout() {
   const [file, setFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // If cart is empty, redirect (optional guard)
+  useEffect(() => {
+    if (!loading && !user) {
+        navigate('/login')
+    }
+  }, [user, loading, navigate])
+
+  // Pre-fill form with user data if available
+  useEffect(() => {
+    if (user) {
+        setFormData(prev => ({
+            ...prev,
+            email: user.email,
+        }))
+    }
+  }, [user])
+
+  if (loading) return <div className="p-8 text-center dark:text-gray-300">Loading...</div>
+
   if (cart.length === 0) {
-    // navigate('/') 
+     return (
+        <div className="container mx-auto px-4 py-8 text-center">
+            <h1 className="text-2xl font-bold mb-4 dark:text-white">Your cart is empty</h1>
+            <button onClick={() => navigate('/')} className="text-blue-600 hover:underline dark:text-blue-400">Go Shopping</button>
+        </div>
+     )
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -32,6 +66,10 @@ export default function Checkout() {
         // Items as JSON string
         const items = cart.map(item => ({ id: item.id, quantity: item.quantity }))
         data.append('items', JSON.stringify(items))
+
+        if (coupon) {
+            data.append('coupon_code', coupon.code)
+        }
 
         if (file) {
             data.append('payment_proof', file)
@@ -60,51 +98,61 @@ export default function Checkout() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+    <div className="container mx-auto px-4 py-8 max-w-2xl bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <h1 className="text-3xl font-bold mb-8 dark:text-white">Checkout</h1>
       
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-        <div className="border-b border-gray-200 pb-4 mb-4">
-            <p className="flex justify-between font-medium">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4 dark:text-white">Order Summary</h2>
+        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+            <p className="flex justify-between font-medium dark:text-gray-300">
                 <span>Total Items:</span>
                 <span>{cart.reduce((sum, item) => sum + item.quantity, 0)}</span>
             </p>
-            <p className="flex justify-between font-bold text-lg mt-2">
+            <p className="flex justify-between text-gray-600 dark:text-gray-400 mt-2">
+                <span>Subtotal:</span>
+                <span>EGP {total.toFixed(2)}</span>
+            </p>
+            {coupon && (
+                <p className="flex justify-between text-green-600 dark:text-green-400 mt-1">
+                    <span>Discount ({coupon.code}):</span>
+                    <span>-EGP {discountAmount.toFixed(2)}</span>
+                </p>
+            )}
+            <p className="flex justify-between font-bold text-lg mt-2 dark:text-white">
                 <span>Total Cost:</span>
-                <span>${total}</span>
+                <span>EGP {finalTotal.toFixed(2)}</span>
             </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                 <input 
                     type="text" 
                     required
                     placeholder="Full Name"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     value={formData.fullName}
                     onChange={e => setFormData({...formData, fullName: e.target.value})}
                 />
             </div>
             
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                 <input 
                     type="email" 
                     required
                     placeholder="Email Address"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
                 <select 
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     value={formData.paymentMethod}
                     onChange={e => setFormData({...formData, paymentMethod: e.target.value})}
                 >
@@ -114,12 +162,12 @@ export default function Checkout() {
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Proof (Screenshot)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Proof (Screenshot)</label>
                 <input 
                     type="file" 
                     accept="image/*"
                     required
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     onChange={e => {
                         const file = e.target.files?.[0]
                         if (file) {
@@ -127,7 +175,7 @@ export default function Checkout() {
                         }
                     }}
                 />
-                <p className="text-xs text-gray-500 mt-1">Please upload a screenshot of your payment receipt.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Please upload a screenshot of your payment receipt.</p>
             </div>
 
             <button 
