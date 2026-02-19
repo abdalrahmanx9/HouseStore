@@ -38,7 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {product.name}
             </Link>
         </h3>
-        <p className="text-xl font-bold text-gray-900">${product.price}</p>
+        <p className="text-xl font-bold text-gray-900">EGP {product.price}</p>
         <button 
             className="w-full mt-4 bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             disabled={product.stock_count === 0}

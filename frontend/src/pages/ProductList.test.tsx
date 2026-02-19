@@ -60,7 +60,7 @@ describe('Product List Page', () => {
         await waitFor(() => {
             expect(screen.getByText('Elden Ring')).toBeInTheDocument()
             expect(screen.getByText('Netflix')).toBeInTheDocument()
-            expect(screen.getByText('$60')).toBeInTheDocument()
+            expect(screen.getByText('EGP 60')).toBeInTheDocument()
         })
     })
 

@@ -85,7 +85,7 @@ export default function ProductDetail() {
                 )}
             </div>
 
-            <p className="text-4xl font-bold text-gray-900 mt-4 mb-6">${product.price}</p>
+            <p className="text-4xl font-bold text-gray-900 mt-4 mb-6">EGP {product.price}</p>
             
             <div className="prose max-w-none text-gray-600 mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
