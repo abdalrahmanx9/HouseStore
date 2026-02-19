@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Database
+*.sqlite3
+*.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Uploads (Keep the directory structure but ignore files)
+backend/uploads/payment_proofs/*
+!backend/uploads/payment_proofs/.gitkeep
+
+# Logs
+*.log
