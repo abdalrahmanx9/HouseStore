@@ -20,13 +20,26 @@ app.add_middleware(SessionMiddleware, secret_key=config.settings.SECRET_KEY)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], 
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+from fastapi.staticfiles import StaticFiles
+import os
+
+# ... imports ...
+
 app.include_router(api_router, prefix=config.settings.API_V1_STR)
+
+# Mount Uploads for Payment Proofs
+UPLOAD_DIR = "uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 
 @app.get("/")
 @limiter.limit("5/minute")

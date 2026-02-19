@@ -3,6 +3,7 @@ import { ShoppingCart, LogIn, Store, Moon, Sun } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useState, useEffect } from 'react'
+import SupportWidget from './SupportWidget'
 
 export default function Layout() {
   const { cart } = useCart()
@@ -72,9 +73,12 @@ export default function Layout() {
             {user ? (
                 <div className="flex items-center space-x-4">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{user.email}</span>
-                    <Link to="/dashboard" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 font-medium transition-colors">
-                        Dashboard
-                    </Link>
+                    
+                    {!user.is_superuser && (
+                        <Link to="/dashboard" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 font-medium transition-colors">
+                            My Orders
+                        </Link>
+                    )}
                     <button onClick={() => logout()} className="text-gray-600 dark:text-gray-300 hover:text-red-600 font-medium transition-colors cursor-pointer">
                         Logout
                     </button>
@@ -95,6 +99,7 @@ export default function Layout() {
       <main>
         <Outlet />
       </main>
+      <SupportWidget />
     </div>
   )
 }
