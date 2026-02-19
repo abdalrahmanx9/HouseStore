@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import { ShoppingBag, Package, MessageSquare, X, Check, Ban, AlertCircle, MessageCircle, Tag } from 'lucide-react'
+import { ShoppingBag, Package, MessageSquare, X, Check, Ban, MessageCircle, Tag, Star, Trash2 } from 'lucide-react'
 import ProductList from '../components/admin/ProductList'
 import AdminCoupons from '../components/AdminCoupons'
 import OrderChat from '../components/OrderChat'
@@ -39,6 +39,23 @@ interface TicketMessage {
   attachment_url?: string
 }
 
+interface User {
+    email: string
+    full_name?: string
+}
+
+interface Review {
+    id: number
+    product_id: number
+    user_id: number
+    user?: User
+    rating: number
+    comment: string
+    is_verified_purchase: boolean
+    is_approved: boolean
+    created_at: string
+}
+
 const fetchOrders = async (): Promise<Order[]> => {
   const response = await axios.get('/api/v1/orders/')
   return response.data
@@ -49,10 +66,14 @@ const fetchTickets = async (): Promise<Ticket[]> => {
   return response.data
 }
 
+const fetchReviews = async (): Promise<Review[]> => {
+    const response = await axios.get('/api/v1/reviews/')
+    return response.data
+}
+
 export default function AdminDashboard() {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'tickets' | 'coupons'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'tickets' | 'coupons' | 'reviews'>('orders')
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
 
@@ -69,6 +90,12 @@ export default function AdminDashboard() {
     queryFn: fetchTickets,
     enabled: activeTab === 'tickets' || true,
     refetchInterval: 10000
+  })
+
+  const { data: reviews, isLoading: isLoadingReviews, isError: isErrorReviews } = useQuery({
+      queryKey: ['admin-reviews'],
+      queryFn: fetchReviews,
+      enabled: activeTab === 'reviews'
   })
 
   // Mutations
@@ -90,10 +117,25 @@ export default function AdminDashboard() {
     }
   })
 
+  const deleteReviewMutation = useMutation({
+      mutationFn: async (id: number) => {
+          await axios.delete(`/api/v1/reviews/${id}`)
+      },
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['admin-reviews'] })
+      }
+  })
+
   const handleOrderStatusUpdate = (id: number, status: string) => {
     if (confirm(`Are you sure you want to mark this order as ${status}?`)) {
         updateOrderStatusMutation.mutate({ id, status })
     }
+  }
+
+  const handleDeleteReview = (id: number) => {
+      if (confirm('Are you sure you want to delete this review?')) {
+          deleteReviewMutation.mutate(id)
+      }
   }
 
   // Derived State (Unread Counts)
@@ -142,6 +184,7 @@ export default function AdminDashboard() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
             }`}
         >
+            <Package className="w-5 h-5 mr-2" />
             <span className="font-medium">Products</span>
         </button>
         <button 
@@ -155,6 +198,17 @@ export default function AdminDashboard() {
             <Tag className="w-5 h-5 mr-2" />
             <span className="font-medium">Coupons</span>
         </button>
+        <button 
+            onClick={() => setActiveTab('reviews')}
+            className={`flex items-center pb-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'reviews' 
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+        >
+            <Star className="w-5 h-5 mr-2" />
+            <span className="font-medium">Reviews</span>
+        </button>
       </div>
 
       {/* Content */}
@@ -162,6 +216,74 @@ export default function AdminDashboard() {
         <ProductList />
       ) : activeTab === 'coupons' ? (
         <AdminCoupons />
+      ) : activeTab === 'reviews' ? (
+        // --- REVIEWS TAB ---
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            {isLoadingReviews ? (
+                <div className="p-8 text-center dark:text-gray-300">Loading Reviews...</div>
+            ) : isErrorReviews ? (
+                <div className="p-8 text-center text-red-500">Error loading reviews</div>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Product ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">User</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Comment</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {reviews?.map((review) => (
+                                <tr key={review.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">#{review.id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{review.product_id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                        <div className="flex flex-col">
+                                            <span>{review.user?.email || `User #${review.user_id}`}</span>
+                                            {review.is_verified_purchase && (
+                                                <span className="text-xs text-green-600 dark:text-green-400 flex items-center">
+                                                    <Check className="w-3 h-3 mr-1" /> Verified
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex text-yellow-400">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star 
+                                                    key={i} 
+                                                    className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'text-gray-300 dark:text-gray-600'}`} 
+                                                />
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" title={review.comment}>
+                                        {review.comment || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {new Date(review.created_at).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        <button 
+                                            onClick={() => handleDeleteReview(review.id)}
+                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                            title="Delete Review"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
       ) : activeTab === 'tickets' ? (
         // --- TICKETS TAB ---
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
@@ -379,7 +501,6 @@ function AdminTicketChat({ ticketId }: { ticketId: number }) {
     // Since SupportWidget had TicketChat inline, I'll redefine it here.
     
     const [newMessage, setNewMessage] = useState('')
-    const { user } = useAuth() // Assuming we have user context
     const queryClient = useQueryClient()
     const messagesEndRef = useState<HTMLDivElement | null>(null)[1] // Placeholder ref
     
