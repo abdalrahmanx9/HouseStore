@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     host: true, // Needed for Docker
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
         target: 'http://backend:8000',
