@@ -3,7 +3,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { type ReactNode } from 'react'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
+import { ComparisonProvider } from './context/ComparisonContext'
 import ScrollRestoration from './components/ScrollRestoration'
+import { Toaster } from 'sonner'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,8 +22,24 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <BrowserRouter>
         <AuthProvider>
           <CartProvider>
-            <ScrollRestoration />
-            {children}
+            <ComparisonProvider>
+              <ScrollRestoration />
+              {children}
+            </ComparisonProvider>
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: 'var(--surface)',
+                  color: 'var(--foreground)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '1rem',
+                  fontFamily: 'var(--font-sans)',
+                },
+              }}
+              richColors
+              closeButton
+            />
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>

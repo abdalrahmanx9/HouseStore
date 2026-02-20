@@ -63,3 +63,22 @@
     @apply font-sans antialiased tracking-tight selection:bg-primary/30 transition-colors duration-300;
   }
 }
+
+/* Marquee / Ticker animation for reviews */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
+/* NProgress-style top loading bar */
+@keyframes nprogress-bar {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+.nprogress-bar {
+  animation: nprogress-bar 1.5s ease-in-out infinite;
+}

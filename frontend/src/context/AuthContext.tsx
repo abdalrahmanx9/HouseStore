@@ -1,7 +1,9 @@
 import { createContext, useContext, type ReactNode, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 interface User {
+  id?: number
   email: string
   name?: string
   full_name?: string
@@ -13,6 +15,7 @@ interface AuthContextType {
   user: User | null
   login: () => void
   logout: () => void
+  refetchUser: () => Promise<User | null>
   isLoading: boolean
 }
 
@@ -21,8 +24,22 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
+    // Axios global interceptor for 401 Unauthorized
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 && window.location.pathname !== '/login') {
+          console.warn("Session expired or unauthorized, logging out.")
+          setUser(null)
+          window.location.href = '/login'
+        }
+        return Promise.reject(error)
+      }
+    )
+
     const fetchUser = async () => {
       try {
         const response = await axios.get('/api/v1/auth/me')
@@ -37,7 +54,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     fetchUser()
+
+    return () => {
+      axios.interceptors.response.eject(interceptor)
+    }
   }, [])
+
+  const refetchUser = async (): Promise<User | null> => {
+    try {
+      const response = await axios.get('/api/v1/auth/me')
+      setUser(response.data)
+      return response.data
+    } catch {
+      setUser(null)
+      return null
+    }
+  }
 
   const login = () => {
     // We must prompt the user to login with Google
@@ -50,13 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await axios.post('/api/v1/auth/logout')
       setUser(null)
     } finally {
-       // Optional: clean up local state or redirect
-       window.location.href = '/'
+       // Navigate to home without reloading page to preserve Theme State
+       navigate('/')
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, refetchUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   )

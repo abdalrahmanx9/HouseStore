@@ -72,6 +72,7 @@ export interface Order {
   items: OrderItem[];
   messages: Message[];
   created_at: string;
+  has_reviewed?: boolean;
 }
 
 export interface Ticket {
