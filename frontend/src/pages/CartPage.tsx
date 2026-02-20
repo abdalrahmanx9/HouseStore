@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { Trash, Tag, X } from 'lucide-react'
+import { Trash, Tag, X, ShoppingBag, Store } from 'lucide-react'
+import { Button } from '../components/ui/Button'
 import axios from 'axios'
 
 export default function CartPage() {
@@ -39,9 +40,17 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 pt-28 text-center bg-background min-h-screen">
-        <h1 className="text-3xl font-bold mb-4 text-foreground">Your Cart is Empty</h1>
-        <Link to="/" className="text-primary hover:text-primary-hover transition-colors font-medium">Continue Shopping</Link>
+      <div className="container mx-auto px-4 py-8 pt-28 text-center bg-background min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="p-6 bg-primary/10 rounded-full mb-2">
+          <ShoppingBag className="w-16 h-16 text-primary/40" />
+        </div>
+        <h1 className="text-3xl font-bold text-foreground">Your bag is feeling light!</h1>
+        <p className="text-gray-400 max-w-sm">Browse our curated collection of premium digital assets and fill it up.</p>
+        <Link to="/">
+          <Button className="gap-2 rounded-full px-8 mt-2 shadow-lg shadow-primary/20">
+            <Store className="w-4 h-4" /> Explore Products
+          </Button>
+        </Link>
       </div>
     )
   }
@@ -55,7 +64,7 @@ export default function CartPage() {
           {items.map((item) => (
             <div key={item.id} className="bg-surface border border-border/50 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                {item.image_url && <img src={`http://localhost:8000/${item.image_url}`} alt={item.name} className="w-20 h-20 object-cover rounded-xl shadow-sm" />}
+                {item.image_url && <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-xl shadow-sm" />}
                 <div>
                   <h3 className="font-bold text-lg text-foreground mb-1">{item.name}</h3>
                   <p className="text-gray-400 font-medium">{item.price} EGP</p>

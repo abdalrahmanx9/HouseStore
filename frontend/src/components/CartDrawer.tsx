@@ -62,8 +62,11 @@ export function CartDrawer() {
                       className="flex gap-4 group"
                     >
                       <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-border bg-surface-hover flex items-center justify-center">
-                        {/* Placeholder for product image if added later, otherwise default style */}
-                        <ShoppingBag className="w-8 h-8 text-border-subtle" />
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <ShoppingBag className="w-8 h-8 text-border-subtle" />
+                        )}
                       </div>
 
                       <div className="flex flex-1 flex-col justify-between py-1">

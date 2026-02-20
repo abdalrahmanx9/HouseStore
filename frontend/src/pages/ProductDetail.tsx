@@ -1,19 +1,33 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import { ArrowLeft, Check, X, ShieldCheck, Zap, Share2, Heart } from 'lucide-react'
+import { ArrowLeft, Check, X, ShieldCheck, Zap, Share2, Heart, Gamepad2, Laptop, MessageCircle, Cpu, GraduationCap, Package } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import type { Review, Product } from '../types'
 import ReviewList from '../components/ReviewList'
-import ReviewForm from '../components/ReviewForm'
-import { useAuth } from '../context/AuthContext'
+
 import ReactMarkdown from 'react-markdown'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Skeleton } from '../components/ui/Skeleton'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card } from '../components/ui/Card'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import Breadcrumbs from '../components/Breadcrumbs'
+import RecentlyViewed, { trackProductView } from '../components/RecentlyViewed'
+
+const CATEGORY_STYLES: Record<string, { gradient: string, Icon: any }> = {
+  'games':        { gradient: 'from-violet-600/30 via-purple-500/20 to-fuchsia-500/10', Icon: Gamepad2 },
+  'software':     { gradient: 'from-blue-600/30 via-cyan-500/20 to-teal-500/10',       Icon: Laptop },
+  'social media': { gradient: 'from-pink-600/30 via-rose-500/20 to-orange-500/10',      Icon: MessageCircle },
+  'system':       { gradient: 'from-emerald-600/30 via-green-500/20 to-lime-500/10',    Icon: Cpu },
+  'education':    { gradient: 'from-amber-600/30 via-yellow-500/20 to-orange-500/10',   Icon: GraduationCap },
+}
+
+function getCategoryStyle(category: string) {
+  return CATEGORY_STYLES[category.toLowerCase()] || { gradient: 'from-indigo-600/30 via-blue-500/20 to-sky-500/10', Icon: Package }
+}
 
 const fetchProduct = async (id: string): Promise<Product> => {
   const response = await axios.get(`/api/v1/products/${id}`)
@@ -23,7 +37,6 @@ const fetchProduct = async (id: string): Promise<Product> => {
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
   const { addToCart } = useCart()
-  const { user } = useAuth()
   
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ['product', id],
@@ -40,21 +53,59 @@ export default function ProductDetail() {
     enabled: !!id,
   })
 
-  const { data: myOrders } = useQuery<any[]>({
-      queryKey: ['my-orders'],
-      queryFn: async () => {
-          const res = await axios.get('/api/v1/orders/')
-          return res.data
-      },
-      enabled: !!user
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} | House Store`
+      trackProductView(product)
+    }
+    return () => {
+      document.title = 'House Store'
+    }
+  }, [product])
+  
+  // Immersive Portrait Media Modal
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+
+  // Persist Favorites locally
+  const [favorites, setFavorites] = useState<Product[]>(() => {
+     const stored = localStorage.getItem('favorites')
+     return stored ? JSON.parse(stored) : []
   })
+  const isFavorite = product ? favorites.some(fav => fav.id === product.id) : false
 
-  const hasPurchased = myOrders?.some(order => order.product_id === parseInt(id!) && order.status === 'completed')
-  const [isFavorite, setIsFavorite] = useState(false)
+  const toggleFavorite = () => {
+      if (!product) return
+      let newFavs = []
+      if (isFavorite) {
+         newFavs = favorites.filter(fav => fav.id !== product.id)
+      } else {
+         newFavs = [...favorites, product]
+      }
+      setFavorites(newFavs)
+      localStorage.setItem('favorites', JSON.stringify(newFavs))
+  }
 
-  const handleShare = () => {
-      navigator.clipboard.writeText(window.location.href)
-      alert("Product Link copied to clipboard!")
+  const handleShare = async () => {
+      try {
+          if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(window.location.href)
+          } else {
+              const textArea = document.createElement("textarea")
+              textArea.value = window.location.href
+              textArea.style.position = "fixed"
+              textArea.style.left = "-999999px"
+              textArea.style.top = "-999999px"
+              document.body.appendChild(textArea)
+              textArea.focus()
+              textArea.select()
+              document.execCommand('copy')
+              textArea.remove()
+          }
+           toast.success('Link copied to clipboard!')
+      } catch (err) {
+           console.error("Failed to copy link", err)
+           toast.error('Failed to copy link. Please copy the URL manually.')
+      }
   }
 
   if (isLoading) {
@@ -89,6 +140,14 @@ export default function ProductDetail() {
       {/* Immersive Header Backdrop */}
       <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-primary/5 to-background pointer-events-none z-0" />
 
+      {/* Breadcrumbs */}
+      <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8 pt-24 relative z-10">
+        <Breadcrumbs items={[
+          { label: product.category, href: `/?category=${encodeURIComponent(product.category)}` },
+          { label: product.name }
+        ]} />
+      </div>
+
       <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8 pt-8 lg:pt-12 relative z-10">
         
         <Link to="/" className="inline-flex items-center text-gray-400 hover:text-primary mb-8 transition-colors text-sm font-semibold tracking-wide uppercase">
@@ -108,14 +167,22 @@ export default function ProductDetail() {
             >
                {/* Decorative Gradient Glow inside image */}
                <div className="absolute inset-0 bg-gradient-to-tr from-surface-hover via-background to-primary/10 opacity-80" />
-               <motion.span 
-                 initial={{ scale: 0.9 }}
-                 animate={{ scale: 1 }}
-                 transition={{ duration: 0.8 }}
-                 className="text-border-subtle tracking-[0.3em] uppercase font-display font-black text-2xl opacity-40 z-10"
-               >
-                 Media Preview
-               </motion.span>
+               
+               {product.image_url ? (
+                  <img 
+                      src={product.image_url} 
+                      alt={product.name} 
+                      className="absolute inset-0 w-full h-full object-cover z-10 cursor-pointer transition-transform hover:scale-105"
+                      onClick={() => setIsImageModalOpen(true)}
+                  />
+               ) : (() => {
+                  const { gradient, Icon: CategoryIcon } = getCategoryStyle(product.category)
+                  return (
+                    <div className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${gradient} z-10`}>
+                      <CategoryIcon className="w-24 h-24 text-foreground/10" strokeWidth={1} />
+                    </div>
+                  )
+               })()}
                
                {/* Badges Floating on Image */}
                <div className="absolute top-6 left-6 z-20 flex gap-2">
@@ -140,7 +207,7 @@ export default function ProductDetail() {
                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground tracking-tight leading-[1.1] font-display uppercase mb-6">
                   {product.name}
                </h1>
-               <div className="prose prose-lg prose-gray dark:prose-invert max-w-3xl text-gray-400 leading-relaxed text-lg lg:text-xl font-medium">
+               <div dir="rtl" className="prose prose-lg prose-gray dark:prose-invert max-w-3xl text-gray-400 leading-relaxed text-lg lg:text-xl font-medium text-right mb-8">
                   <ReactMarkdown>
                     {product.description || 'Experience the pinnacle of digital craftsmanship with this premium asset, tailored to integrate seamlessly into your elite workflow.'}
                   </ReactMarkdown>
@@ -166,7 +233,7 @@ export default function ProductDetail() {
                        <button onClick={handleShare} className="w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-colors text-gray-400">
                          <Share2 className="w-4 h-4" />
                        </button>
-                       <button onClick={() => setIsFavorite(!isFavorite)} className={`w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center transition-colors ${isFavorite ? 'bg-red-500/20 text-red-500' : 'hover:bg-red-500/20 hover:text-red-500 text-gray-400'}`}>
+                       <button onClick={toggleFavorite} className={`w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center transition-colors ${isFavorite ? 'bg-red-500/20 text-red-500' : 'hover:bg-red-500/20 hover:text-red-500 text-gray-400'}`}>
                          <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
                        </button>
                     </div>
@@ -241,29 +308,6 @@ export default function ProductDetail() {
                  <h2 className="text-4xl md:text-5xl font-black text-foreground font-display uppercase tracking-tight mb-2">Customer Reviews</h2>
                  <p className="text-xl text-gray-400 font-medium">Verified purchases from {reviews?.length || 0} customers.</p>
                </div>
-               
-               {user ? (
-                   hasPurchased ? (
-                       <div className="w-full md:w-auto mt-4 md:mt-0">
-                         {/* For a real app, this form could be a modal or expanding drawer to keep UI clean */}
-                         <Card className="rounded-[2rem] p-6 bg-surface/50 border-border/50 max-w-md ml-auto">
-                            <ReviewForm productId={product.id} />
-                         </Card>
-                       </div>
-                   ) : (
-                       <div className="px-6 py-4 mt-4 md:mt-0 rounded-[2rem] border border-border/50 bg-surface/30 backdrop-blur-md flex flex-col items-center gap-2 md:flex text-center max-w-sm ml-auto">
-                           <span className="text-sm font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ShieldCheck className="w-4 h-4"/> Verified Purchase Required</span>
-                           <p className="text-xs text-gray-500">You must purchase this asset and wait for activation to submit intelligence.</p>
-                       </div>
-                   )
-               ) : (
-                   <div className="px-6 py-4 rounded-[2rem] border border-border/50 bg-surface/30 backdrop-blur-md flex items-center gap-4 hidden md:flex">
-                       <span className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Authentication Required</span>
-                       <Link to="/login">
-                           <Button variant="secondary" size="sm" className="rounded-full px-6 uppercase font-bold text-xs tracking-wider">Log In</Button>
-                       </Link>
-                   </div>
-               )}
             </div>
             
             {/* Reviews display area could be upgraded in ReviewList.tsx, but we render it here */}
@@ -272,6 +316,38 @@ export default function ProductDetail() {
             </div>
         </motion.div>
       </div>
+
+      {/* Fullscreen Portrait Media Modal */}
+      <AnimatePresence>
+        {isImageModalOpen && product?.image_url && (
+          <motion.div 
+             initial={{ opacity: 0 }} 
+             animate={{ opacity: 1 }} 
+             exit={{ opacity: 0 }}
+             className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer"
+             onClick={() => setIsImageModalOpen(false)}
+          >
+              <button 
+                className="absolute top-6 right-6 p-2 rounded-full bg-surface/30 text-white hover:bg-surface-hover transition-colors z-[110]"
+                onClick={() => setIsImageModalOpen(false)}
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <motion.img 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                src={product.image_url} 
+                alt={product.name}
+                className="max-w-full max-h-[95vh] w-auto h-auto object-contain rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.8)] cursor-default select-none"
+                onClick={(e) => e.stopPropagation()}
+              />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <RecentlyViewed />
     </div>
   )
 }

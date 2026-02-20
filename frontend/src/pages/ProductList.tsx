@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import ProductCard from '../components/ProductCard'
-import { Star, ShieldCheck, Zap, Gamepad2, Laptop, MessageCircle, Cpu, Store } from 'lucide-react'
+import { Star, ShieldCheck, Zap, Gamepad2, Laptop, MessageCircle, Cpu, Store, GraduationCap, Package, Search, ArrowUpDown } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 interface Product {
   id: number
@@ -51,6 +53,21 @@ import { motion } from 'framer-motion'
 
 export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState('default')
+  const [visibleCount, setVisibleCount] = useState(12)
+  const location = useLocation()
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const cat = params.get('category')
+    if (cat) {
+        setSelectedCategory(cat)
+        // Scroll slightly past the trending/categories to see items
+        const el = document.getElementById('catalog')
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [location.search])
 
   const { data: products, isLoading, isError } = useQuery({
     queryKey: ['products'],
@@ -62,11 +79,41 @@ export default function ProductList() {
     queryFn: fetchRecentReviews,
   })
 
-  // Filter products based on selected category
-  const filteredProducts = products?.filter(product => {
-    if (!selectedCategory) return true;
-    return product.category.toLowerCase() === selectedCategory.toLowerCase();
-  }) || [];
+  const filteredProducts = useMemo(() => {
+    let result = products?.filter(product => {
+      const matchesCategory = !selectedCategory || product.category.toLowerCase() === selectedCategory.toLowerCase();
+      const matchesSearch = !searchQuery || product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }) || [];
+
+    // Sort
+    switch (sortBy) {
+      case 'price_asc': result = [...result].sort((a, b) => a.price - b.price); break;
+      case 'price_desc': result = [...result].sort((a, b) => b.price - a.price); break;
+      case 'stock': result = [...result].sort((a, b) => a.stock_count - b.stock_count); break;
+      case 'name': result = [...result].sort((a, b) => a.name.localeCompare(b.name)); break;
+    }
+    return result;
+  }, [products, selectedCategory, searchQuery, sortBy]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(12)
+  }, [selectedCategory, searchQuery, sortBy])
+
+  const CATEGORY_ICONS: Record<string, LucideIcon> = {
+    'games': Gamepad2,
+    'software': Laptop,
+    'social media': MessageCircle,
+    'system': Cpu,
+    'education': GraduationCap,
+  }
+
+  const uniqueCategories = useMemo(() => {
+    if (!products) return []
+    const cats = Array.from(new Set(products.map(p => p.category)))
+    return cats
+  }, [products])
 
   if (isLoading) {
     return (
@@ -168,8 +215,21 @@ export default function ProductList() {
       </section>
 
       {/* Category Chapter Nav */}
-      <div className="sticky top-16 z-30 w-full bg-background/80 backdrop-blur-md border-b border-border/50 py-4 shadow-sm">
-        <div className="w-full max-w-[1920px] px-4 md:px-8 mx-auto flex items-center justify-start md:justify-center gap-8 overflow-x-auto no-scrollbar scroll-smooth">
+      <div id="categories" className="sticky top-16 z-30 w-full bg-background/80 backdrop-blur-md border-b border-border/50 py-4 shadow-sm">
+        <div className="w-full max-w-[1920px] px-4 md:px-8 mx-auto flex items-center gap-4">
+          {/* Search Input */}
+          <div className="relative w-full max-w-xs hidden md:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-surface border border-border/50 rounded-full text-sm text-foreground placeholder:text-foreground/40 outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+          {/* Category Buttons */}
+          <div className="flex items-center justify-start md:justify-center gap-6 overflow-x-auto no-scrollbar scroll-smooth flex-1">
           <button 
              onClick={() => setSelectedCategory(null)}
              className={`flex flex-col items-center gap-2 min-w-[70px] transition-colors group ${!selectedCategory ? 'text-primary' : 'text-gray-400 hover:text-primary'}`}
@@ -177,57 +237,63 @@ export default function ProductList() {
             <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${!selectedCategory ? 'bg-primary/20' : 'bg-surface group-hover:bg-primary/10'}`}>
               <Store className={`w-6 h-6 transition-transform ${!selectedCategory ? 'scale-110 text-primary' : 'group-hover:scale-110'}`} />
             </div>
-            <span className={`text-xs ${!selectedCategory ? 'font-bold' : 'font-medium'}`}>Verify All</span>
+            <span className={`text-xs ${!selectedCategory ? 'font-bold' : 'font-medium'}`}>View All</span>
           </button>
           
-          <button 
-             onClick={() => setSelectedCategory('Games')}
-             className={`flex flex-col items-center gap-2 min-w-[70px] transition-colors group ${selectedCategory === 'Games' ? 'text-primary' : 'text-gray-400 hover:text-primary'}`}
-          >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${selectedCategory === 'Games' ? 'bg-primary/20' : 'bg-surface group-hover:bg-primary/10'}`}>
-               <Gamepad2 className={`w-6 h-6 transition-transform ${selectedCategory === 'Games' ? 'scale-110' : 'group-hover:scale-110'}`} />
-            </div>
-            <span className={`text-xs ${selectedCategory === 'Games' ? 'font-bold' : 'font-medium'}`}>Games</span>
-          </button>
-
-          <button 
-             onClick={() => setSelectedCategory('Software')}
-             className={`flex flex-col items-center gap-2 min-w-[70px] transition-colors group ${selectedCategory === 'Software' ? 'text-primary' : 'text-gray-400 hover:text-primary'}`}
-          >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${selectedCategory === 'Software' ? 'bg-primary/20' : 'bg-surface group-hover:bg-primary/10'}`}>
-               <Laptop className={`w-6 h-6 transition-transform ${selectedCategory === 'Software' ? 'scale-110' : 'group-hover:scale-110'}`} />
-            </div>
-            <span className={`text-xs ${selectedCategory === 'Software' ? 'font-bold' : 'font-medium'}`}>Software</span>
-          </button>
-
-          <button 
-             onClick={() => setSelectedCategory('Social Media')}
-             className={`flex flex-col items-center gap-2 min-w-[70px] transition-colors group ${selectedCategory === 'Social Media' ? 'text-primary' : 'text-gray-400 hover:text-primary'}`}
-          >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${selectedCategory === 'Social Media' ? 'bg-primary/20' : 'bg-surface group-hover:bg-primary/10'}`}>
-               <MessageCircle className={`w-6 h-6 transition-transform ${selectedCategory === 'Social Media' ? 'scale-110' : 'group-hover:scale-110'}`} />
-            </div>
-            <span className={`text-xs ${selectedCategory === 'Social Media' ? 'font-bold' : 'font-medium'}`}>Social Media</span>
-          </button>
-          
-          <button 
-             onClick={() => setSelectedCategory('System')}
-             className={`flex flex-col items-center gap-2 min-w-[70px] transition-colors group ${selectedCategory === 'System' ? 'text-primary' : 'text-gray-400 hover:text-primary'}`}
-          >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${selectedCategory === 'System' ? 'bg-primary/20' : 'bg-surface group-hover:bg-primary/10'}`}>
-               <Cpu className={`w-6 h-6 transition-transform ${selectedCategory === 'System' ? 'scale-110' : 'group-hover:scale-110'}`} />
-            </div>
-            <span className={`text-xs ${selectedCategory === 'System' ? 'font-bold' : 'font-medium'}`}>System Tools</span>
-          </button>
+          {uniqueCategories.map(cat => {
+            const CatIcon = CATEGORY_ICONS[cat.toLowerCase()] || Package
+            const isActive = selectedCategory === cat
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`flex flex-col items-center gap-2 min-w-[70px] transition-colors group ${isActive ? 'text-primary' : 'text-gray-400 hover:text-primary'}`}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isActive ? 'bg-primary/20' : 'bg-surface group-hover:bg-primary/10'}`}>
+                  <CatIcon className={`w-6 h-6 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                </div>
+                <span className={`text-xs ${isActive ? 'font-bold' : 'font-medium'}`}>{cat}</span>
+              </button>
+            )
+          })}
+          </div>
         </div>
       </div>
 
+      {/* Trending Section */}
+      <section id="trending" className="w-full max-w-[1920px] px-4 md:px-8 mx-auto py-16">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+             <Star className="w-8 h-8 text-yellow-500 fill-current" /> Trending Now
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 mb-12">
+          {products?.slice().sort((a, b) => a.stock_count - b.stock_count).slice(0, 4).map((product) => (
+             <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+
       {/* Product Grid Section */}
-      <section className="w-full max-w-[1920px] px-4 md:px-8 mx-auto py-16 lg:py-24">
-        <div className="flex items-center justify-between mb-10">
+      <section id="catalog" className="w-full max-w-[1920px] px-4 md:px-8 mx-auto pb-16 lg:pb-24">
+        <div className="flex items-center justify-between mb-10 gap-4">
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
              {selectedCategory ? `${selectedCategory} Collection` : 'Featured Products'}
           </h2>
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="w-4 h-4 text-foreground/40" />
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              className="bg-surface border border-border/50 rounded-xl px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="default">Default</option>
+              <option value="price_asc">Price: Low → High</option>
+              <option value="price_desc">Price: High → Low</option>
+              <option value="stock">Lowest Stock</option>
+              <option value="name">Name: A → Z</option>
+            </select>
+          </div>
         </div>
         
         {filteredProducts.length === 0 ? (
@@ -245,63 +311,77 @@ export default function ProductList() {
              </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 lg:gap-8 min-h-[400px]">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          <div className="flex flex-col items-center gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 lg:gap-8 min-h-[400px] w-full">
+              {filteredProducts.slice(0, visibleCount).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            
+            {visibleCount < filteredProducts.length && (
+              <button
+                onClick={() => setVisibleCount((prev: number) => prev + 12)}
+                className="px-8 py-3 bg-surface hover:bg-surface-hover border border-border/50 rounded-full text-foreground/80 font-medium text-sm transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-sm"
+              >
+                Load More Products <ArrowUpDown className="w-4 h-4 opacity-70" />
+              </button>
+            )}
           </div>
         )}
       </section>
 
       {/* Customer Reviews Section */}
       {recentReviews && recentReviews.length > 0 && (
-        <section className="w-full bg-surface py-16 lg:py-24 border-t border-border/50">
+         <section className="w-full bg-surface py-16 lg:py-24 border-t border-border/50">
            <div className="w-full max-w-[1920px] px-4 md:px-8 mx-auto">
             <div className="text-center max-w-2xl mx-auto mb-16">
                 <h2 className="text-3xl font-bold tracking-tight text-foreground mb-4">Loved by Developers Worldwide</h2>
                 <p className="text-gray-400">Don't just take our word for it. Here's what our community has to say about our premium assets.</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {recentReviews.map((review, idx) => (
-                  <motion.div 
-                      key={review.id}
-                      whileHover={{ y: -5 }}
-                      className="bg-background p-8 rounded-2xl border border-border/50 shadow-xl flex flex-col justify-between"
+            {/* Flowing Marquee Reviews */}
+            <div className="relative overflow-hidden">
+              {/* Fade edges */}
+              <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-surface to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-surface to-transparent z-10 pointer-events-none" />
+              
+              <div className="flex gap-6 animate-marquee hover:[animation-play-state:paused]" style={{ width: 'max-content' }}>
+                {/* Duplicate reviews for seamless loop */}
+                {[...recentReviews, ...recentReviews].map((review, idx) => (
+                  <div 
+                      key={`${review.id}-${idx}`}
+                      className="bg-background p-6 rounded-2xl border border-border/50 shadow-xl flex flex-col justify-between w-[340px] shrink-0"
                   >
                       <div>
-                          <div className="flex text-yellow-500 mb-4">
+                          <div className="flex text-yellow-500 mb-3">
                               {Array.from({ length: 5 }).map((_, i) => (
                                 <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'text-gray-600'}`} />
                               ))}
                           </div>
-                          <p className="text-gray-300 mb-6 leading-relaxed italic">"{review.comment || 'No comment provided.'}"</p>
+                          <p className="text-gray-300 mb-4 leading-relaxed italic text-sm line-clamp-3">"{review.comment || 'No comment provided.'}"</p>
                       </div>
-                      <div className="flex items-center gap-4 border-t border-border/50 pt-4 mt-auto">
-                          {/* User Avatar */}
+                      <div className="flex items-center gap-3 border-t border-border/50 pt-3 mt-auto">
                           {review.user?.picture ? (
-                              <img src={review.user.picture} alt="User Avatar" loading={idx < 3 ? 'eager' : 'lazy'} className="w-10 h-10 rounded-full object-cover shadow-lg border border-border/50" />
+                              <img src={review.user.picture} alt="User Avatar" loading="lazy" className="w-8 h-8 rounded-full object-cover shadow-lg border border-border/50" />
                           ) : (
-                              <div className="w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center font-bold text-gray-400 shadow-lg border border-border/50">
+                              <div className="w-8 h-8 rounded-full bg-surface-hover flex items-center justify-center font-bold text-gray-400 text-sm shadow-lg border border-border/50">
                                   {(review.user?.full_name || review.user?.email || 'A')[0].toUpperCase()}
                               </div>
                           )}
-                          
-                          <div className="flex-1">
-                              <p className="font-semibold text-foreground text-sm line-clamp-1">{review.user?.full_name || review.user?.email?.split('@')[0] || 'Anonymous'}</p>
-                              <p className="text-xs text-primary font-medium tracking-wide">Verified Customer</p>
+                          <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-foreground text-xs line-clamp-1">{review.user?.full_name || review.user?.email?.split('@')[0] || 'Anonymous'}</p>
+                              <p className="text-[10px] text-primary font-medium tracking-wide">Verified Customer</p>
                           </div>
-                          
-                          {/* Product Thumbnail */}
                           {review.product?.image_url && (
-                             <img src={review.product.image_url} alt={review.product.name} loading={idx < 3 ? 'eager' : 'lazy'} className="w-12 h-12 rounded-lg object-cover ml-auto border border-border/30 shadow-md" title={`Purchased ${review.product.name}`} />
+                             <img src={review.product.image_url} alt={review.product.name} loading="lazy" className="w-10 h-10 rounded-lg object-cover ml-auto border border-border/30 shadow-md" title={`Purchased ${review.product.name}`} />
                           )}
                       </div>
-                  </motion.div>
+                  </div>
                 ))}
+              </div>
             </div>
-         </div>
-        </section>
+          </div>
+         </section>
       )}
     </div>
   )

@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { Star } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ReviewCreate } from '../types'
 
 interface ReviewFormProps {
     productId: number
+    orderId: number
     onSuccess?: () => void
 }
 
-export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
+export default function ReviewForm({ productId, orderId, onSuccess }: ReviewFormProps) {
     const [rating, setRating] = useState(0)
     const [hoverRating, setHoverRating] = useState(0)
     const [comment, setComment] = useState('')
@@ -26,6 +28,7 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
             queryClient.invalidateQueries({ queryKey: ['reviews', productId.toString()] })
             setRating(0)
             setComment('')
+            toast.success('Review submitted successfully!')
             if (onSuccess) onSuccess()
         },
         onError: (err: any) => {
@@ -40,12 +43,12 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
             return
         }
         setError('')
-        submitMutation.mutate({ product_id: productId, rating, comment })
+        submitMutation.mutate({ product_id: productId, order_id: orderId, rating, comment } as any)
     }
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col">
-            <h3 className="text-xl font-bold mb-6 text-foreground">Submit Intelligence</h3>
+            <h3 className="text-xl font-bold mb-6 text-foreground">Write a Review</h3>
             
             {error && (
                 <div className="mb-4 bg-danger/10 text-danger p-3 rounded-lg text-sm font-semibold border border-danger/20">
@@ -78,13 +81,13 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
             </div>
 
             <div className="mb-6">
-                <label className="block text-xs uppercase tracking-widest font-bold text-gray-500 mb-3">Signal Transmission (Optional)</label>
+                <label className="block text-xs uppercase tracking-widest font-bold text-gray-500 mb-3">Comment (Optional)</label>
                 <textarea
                     className="w-full px-4 py-3 bg-surface/50 border border-border/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-foreground placeholder:text-gray-600 transition-all resize-none font-medium"
                     rows={4}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Provide detailed logs of your experience..."
+                    placeholder="Write your review here..."
                 />
             </div>
 
@@ -93,7 +96,7 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
                 disabled={submitMutation.isPending}
                 className="w-full bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-bold px-4 py-3.5 rounded-xl disabled:opacity-50 transition-all uppercase tracking-widest text-sm shadow-[0_0_15px_-3px_var(--color-primary)] active:scale-95"
             >
-                {submitMutation.isPending ? 'Transmitting...' : 'Upload Review'}
+                {submitMutation.isPending ? 'Submitting...' : 'Submit Review'}
             </button>
         </form>
     )
