@@ -5,3 +5,4 @@ from .order import Order
 from .ticket import Ticket, TicketMessage
 from .review import Review
 from .coupon import Coupon
+from .wishlist import Wishlist

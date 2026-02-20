@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     coupons,
     reviews,
     admin,
+    wishlist,
 )
 
 api_router = APIRouter()
@@ -19,3 +20,4 @@ api_router.include_router(tickets.router, prefix="/tickets", tags=["tickets"])
 api_router.include_router(coupons.router, prefix="/coupons", tags=["coupons"])
 api_router.include_router(reviews.router, prefix="/reviews", tags=["reviews"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(wishlist.router, prefix="/wishlist", tags=["wishlist"])

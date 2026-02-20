@@ -1,7 +1,10 @@
 """Admin-only endpoints for dashboard statistics and analytics."""
 
+import csv
+import io
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime, timedelta, timezone
@@ -181,3 +184,126 @@ async def toggle_user_superuser(
     await db.commit()
     await db.refresh(user)
     return user
+
+
+@router.get("/export/orders")
+async def export_orders_csv(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+):
+    """Export all orders as CSV."""
+    stmt = select(models.Order).order_by(models.Order.id.desc())
+    result = await db.execute(stmt)
+    orders = result.scalars().all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Product", "Amount", "Status", "Payment Method", "Coupon", "Created At"])
+    for o in orders:
+        writer.writerow([
+            o.id, o.product_name, o.amount, o.status,
+            o.payment_method, o.coupon_code or "",
+            str(o.created_at),
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=orders_{datetime.now().strftime('%Y%m%d')}.csv"},
+    )
+
+
+@router.get("/export/users")
+async def export_users_csv(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+):
+    """Export all users as CSV."""
+    stmt = select(models.User).order_by(models.User.id.desc())
+    result = await db.execute(stmt)
+    users = result.scalars().all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Email", "Full Name", "Active", "Superuser", "Created At"])
+    for u in users:
+        writer.writerow([
+            u.id, u.email, u.full_name or "",
+            u.is_active, u.is_superuser, str(u.created_at),
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=users_{datetime.now().strftime('%Y%m%d')}.csv"},
+    )
+
+
+@router.get("/product-analytics")
+async def get_product_analytics(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+):
+    """Get per-product analytics: orders, revenue, avg rating."""
+    from app.models.review import Review
+    from app.models.product import Product
+
+    stmt = select(Product).where(Product.is_active == True).order_by(Product.id.desc())  # noqa: E712
+    result = await db.execute(stmt)
+    products = result.scalars().all()
+
+    analytics = []
+    for p in products:
+        # Total orders and revenue for this product
+        order_stats = await db.execute(
+            select(
+                func.count(models.Order.id).label("total_orders"),
+                func.coalesce(func.sum(models.Order.amount), 0).label("total_revenue"),
+            ).where(models.Order.product_id == p.id)
+        )
+        row = order_stats.one()
+
+        # Completed orders revenue
+        completed_stats = await db.execute(
+            select(
+                func.count(models.Order.id).label("completed_orders"),
+                func.coalesce(func.sum(models.Order.amount), 0).label("completed_revenue"),
+            ).where(
+                models.Order.product_id == p.id,
+                models.Order.status == "completed",
+            )
+        )
+        c_row = completed_stats.one()
+
+        # Average rating
+        avg_stmt = select(func.avg(Review.rating)).where(
+            Review.product_id == p.id,
+            Review.is_approved == True,  # noqa: E712
+        )
+        avg_rating = (await db.execute(avg_stmt)).scalar()
+
+        # Stock count
+        from app.models.product import StockItem
+        stock_count = (await db.execute(
+            select(func.count(StockItem.id)).where(
+                StockItem.product_id == p.id,
+                StockItem.is_sold == False,  # noqa: E712
+            )
+        )).scalar() or 0
+
+        analytics.append({
+            "id": p.id,
+            "name": p.name,
+            "category": p.category,
+            "price": p.price,
+            "total_orders": row.total_orders,
+            "total_revenue": float(row.total_revenue),
+            "completed_orders": c_row.completed_orders,
+            "completed_revenue": float(c_row.completed_revenue),
+            "average_rating": round(float(avg_rating), 1) if avg_rating else None,
+            "stock_count": stock_count,
+        })
+
+    return analytics

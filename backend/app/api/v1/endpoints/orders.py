@@ -314,10 +314,20 @@ async def update_order(
 ):
     """
     Update an order (Admin Only).
+    Auto-delivery: If product delivery_type is 'auto' and status is being set to
+    'completed', automatically assign a stock item as the delivery_key.
     """
     order = await crud.order.get(db, id=id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    # Auto-delivery logic
+    if order_in.status == "completed" and not order_in.delivery_key:
+        product = await crud.product.get(db, id=order.product_id)
+        if product and product.delivery_type == "auto":
+            stock_item = await crud.product.assign_stock_item(db, product_id=product.id)
+            if stock_item:
+                order_in.delivery_key = stock_item.content
 
     order = await crud.order.update(db, db_obj=order, obj_in=order_in)
     return order
