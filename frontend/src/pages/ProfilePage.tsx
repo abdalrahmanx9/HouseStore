@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { User, Mail, Shield, Save, Key, Camera } from 'lucide-react'
+import { User, Mail, Shield, Save, Key, Camera, Heart } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { motion } from 'framer-motion'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Badge } from '../components/ui/Badge'
+import { toast } from 'sonner'
 
 export default function ProfilePage() {
     const { user } = useAuth()
@@ -38,23 +40,39 @@ export default function ProfilePage() {
 
         try {
             await axios.post('/api/v1/users/me/avatar', uploadData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
             })
             // Quick reload to show new picture (a proper impl would refresh AuthContext)
             window.location.reload()
         } catch (error) {
             console.error('Failed to upload avatar', error)
-            alert('Failed to upload profile photo.')
+            toast.error('Failed to upload profile photo.')
         } finally {
             setIsUploadingAvatar(false)
         }
     }
 
+    const [isSaving, setIsSaving] = useState(false)
+
     const handleSave = async () => {
-        // Mock save function since we might not have a PUT /auth/me yet
-        // If we do, we can call it here. For now just toggle state and pretend.
-        setIsEditing(false)
-        alert('Profile updated (mocked backend save)')
+        setIsSaving(true)
+        try {
+            await axios.put('/api/v1/users/me', {
+                full_name: formData.full_name,
+                email: formData.email
+            }, {
+                withCredentials: true
+            })
+            setIsEditing(false)
+            // ideally we'd trigger a reload or context update here
+            window.location.reload()
+        } catch (error) {
+            console.error('Failed to save profile', error)
+            toast.error('Failed to save profile changes.')
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     if (!user) return <div className="p-8 pt-32 text-center text-gray-500">Loading...</div>
@@ -122,9 +140,10 @@ export default function ProfilePage() {
                                 <Button 
                                     variant={isEditing ? 'default' : 'outline'} 
                                     size="sm" 
+                                    disabled={isSaving}
                                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                                 >
-                                    {isEditing ? <><Save className="w-4 h-4 mr-2" /> Save Changes</> : 'Edit Profile'}
+                                    {isEditing ? (isSaving ? 'Saving...' : <><Save className="w-4 h-4 mr-2" /> Save Changes</>) : 'Edit Profile'}
                                 </Button>
                             </div>
 
@@ -169,6 +188,41 @@ export default function ProfilePage() {
                                     <Key className="w-4 h-4" /> Change Password
                                 </Button>
                             </div>
+                        </Card>
+
+                        {/* Favorites Section */}
+                        <Card className="p-6 border-border/50 bg-surface/50 backdrop-blur-md">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Heart className="w-5 h-5 text-red-500 fill-current" />
+                                <h3 className="text-lg font-bold text-foreground">Favorite Products</h3>
+                            </div>
+                            
+                            {(() => {
+                                const stored = localStorage.getItem('favorites')
+                                const favorites = stored ? JSON.parse(stored) : []
+                                
+                                if (favorites.length === 0) {
+                                    return <p className="text-sm text-gray-400">You haven't added any products to your favorites yet.</p>
+                                }
+
+                                return (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {favorites.map((product: any) => (
+                                            <Link key={product.id} to={`/products/${product.id}`} className="group relative rounded-xl border border-border/50 bg-background/50 overflow-hidden flex items-center hover:border-primary/50 transition-colors">
+                                                {product.image_url && (
+                                                    <div className="w-20 h-20 shrink-0 bg-surface-hover">
+                                                        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                    </div>
+                                                )}
+                                                <div className="p-3">
+                                                    <p className="font-bold text-foreground text-sm line-clamp-1">{product.name}</p>
+                                                    <p className="text-xs text-primary font-medium">{product.price} EGP</p>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )
+                            })()}
                         </Card>
                     </motion.div>
                 </div>

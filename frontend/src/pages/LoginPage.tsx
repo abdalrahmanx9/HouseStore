@@ -5,10 +5,11 @@ import axios from 'axios'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, refetchUser } = useAuth()
+  const navigate = useNavigate()
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({
     email: '',
@@ -33,9 +34,11 @@ export default function LoginPage() {
         await axios.post('/api/v1/auth/manual-login', params, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
-        const meRes = await axios.get('/api/v1/auth/me')
-        const user = meRes.data
-        window.location.href = user.is_superuser ? '/admin' : '/dashboard' 
+        // Refresh auth context so user state is populated
+        const user = await refetchUser()
+        if (user) {
+          navigate(user.is_superuser ? '/admin' : '/dashboard')
+        }
       } else {
         // Register
         await axios.post('/api/v1/auth/register', {
@@ -122,7 +125,7 @@ export default function LoginPage() {
                     initial={{ opacity: 0, height: 0, y: -10 }}
                     animate={{ opacity: 1, height: 'auto', y: 0 }}
                     exit={{ opacity: 0, height: 0 }}
-                    className={`p-4 rounded-xl text-sm font-semibold border ${error.includes('created') ? 'bg-succcess/10 text-succcess border-succcess/20' : 'bg-danger/10 text-danger border-danger/20'}`}
+                    className={`p-4 rounded-xl text-sm font-semibold border ${error.includes('created') ? 'bg-success/10 text-success border-success/20' : 'bg-danger/10 text-danger border-danger/20'}`}
                 >
                   {error}
                 </motion.div>

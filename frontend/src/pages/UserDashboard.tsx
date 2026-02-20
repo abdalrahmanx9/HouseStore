@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import { Package, Clock, CheckCircle, XCircle, MessageSquare, X, User as UserIcon, Star } from 'lucide-react'
+import { Package, Clock, CheckCircle, XCircle, MessageSquare, X, User as UserIcon, Star, ShoppingBag } from 'lucide-react'
 import OrderChat from '../components/OrderChat'
-import { Link } from 'react-router-dom'
+import ReviewForm from '../components/ReviewForm'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
+import { toast } from 'sonner'
 
 interface Order {
   id: number
@@ -20,6 +22,8 @@ interface Order {
   payment_proof_url: string
   created_at: string
   has_unread_messages: boolean
+  has_reviewed?: boolean
+  delivery_key?: string
 }
 
 const fetchMyOrders = async (): Promise<Order[]> => {
@@ -29,14 +33,25 @@ const fetchMyOrders = async (): Promise<Order[]> => {
 
 export default function UserDashboard() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
+  const [selectedReviewOrder, setSelectedReviewOrder] = useState<{productId: number, orderId: number} | null>(null)
   const queryClient = useQueryClient()
   const { user } = useAuth()
+  const { addToCart } = useCart()
   
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ['my-orders'],
     queryFn: fetchMyOrders,
     refetchInterval: 10000 // Poll for new messages/updates
   })
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const orderId = params.get('orderId')
+    if (orderId) {
+       setSelectedOrderId(parseInt(orderId))
+       window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [])
 
   const handleCloseChat = () => {
     setSelectedOrderId(null)
@@ -69,6 +84,23 @@ export default function UserDashboard() {
           </header>
           
           <div className="flex-1 p-6 md:p-8 pt-0 overflow-y-auto">
+              {/* User Stats Cards */}
+              {orders && orders.length > 0 && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 max-w-5xl">
+                  {[
+                    { label: 'Total Orders', value: orders.length, accent: 'text-blue-400 bg-blue-500/15' },
+                    { label: 'Total Spent', value: `${orders.reduce((s, o) => s + o.amount, 0).toFixed(0)} EGP`, accent: 'text-emerald-400 bg-emerald-500/15' },
+                    { label: 'Pending', value: orders.filter(o => o.status === 'pending').length, accent: 'text-amber-400 bg-amber-500/15' },
+                    { label: 'Completed', value: orders.filter(o => o.status === 'completed').length, accent: 'text-primary bg-primary/15' },
+                  ].map(stat => (
+                    <div key={stat.label} className="bg-surface border border-border/50 rounded-xl p-4 flex flex-col gap-1">
+                      <span className="text-[11px] font-medium text-foreground/50 uppercase tracking-wider">{stat.label}</span>
+                      <span className={`text-xl font-black ${stat.accent.split(' ')[0]}`}>{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <motion.div 
                  initial={{ opacity: 0, y: 10 }}
                  animate={{ opacity: 1, y: 0 }}
@@ -135,12 +167,41 @@ export default function UserDashboard() {
                                   
                                   <div className="flex gap-2 mt-2 md:mt-0">
                                       {order.status === 'completed' && (
-                                          <Link to={`/products/${order.product_id}#reviews`}>
-                                              <Button variant="secondary" size="sm" className="gap-2 relative">
+                                          order.has_reviewed ? (
+                                              <Button 
+                                                  disabled
+                                                  variant="outline" 
+                                                  size="sm" 
+                                                  className="gap-2 relative pointer-events-none"
+                                              >
+                                                  <CheckCircle className="w-4 h-4 text-success" />
+                                                  Submitted
+                                              </Button>
+                                          ) : (
+                                              <Button 
+                                                  onClick={() => setSelectedReviewOrder({productId: order.product_id, orderId: order.id})} 
+                                                  variant="secondary" 
+                                                  size="sm" 
+                                                  className="gap-2 relative hover:bg-primary hover:text-white hover:border-primary transition-colors"
+                                              >
                                                   <Star className="w-4 h-4" />
                                                   Review
                                               </Button>
-                                          </Link>
+                                          )
+                                      )}
+                                      {order.status === 'completed' && (
+                                          <Button 
+                                              onClick={() => {
+                                                addToCart({ id: order.product_id, name: order.product_name, price: order.amount, category: '', stock_count: 1 } as any)
+                                                toast.success(`${order.product_name} added to cart!`)
+                                              }}
+                                              variant="outline" 
+                                              size="sm" 
+                                              className="gap-2"
+                                          >
+                                              <ShoppingBag className="w-4 h-4" />
+                                              Buy Again
+                                          </Button>
                                       )}
                                       <Button 
                                           variant={order.has_unread_messages ? 'default' : 'outline'}
@@ -154,7 +215,72 @@ export default function UserDashboard() {
                                   </div>
                                 </div>
                               </div>
+
+                              {/* NEW: Delivery Key Section */}
+                              {order.status === 'completed' && order.delivery_key && (
+                                <div className="mt-4 pt-4 border-t border-border/50">
+                                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                    <div>
+                                      <p className="text-sm text-primary font-semibold mb-1">Your License / Download Key</p>
+                                      <code className="text-foreground font-mono select-all bg-background px-3 py-1.5 rounded-lg border border-border/50 block w-full items-center md:w-auto break-all">
+                                          {order.delivery_key}
+                                      </code>
+                                    </div>
+                                    <Button 
+                                        variant="default"
+                                        size="sm"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(order.delivery_key!)
+                                            toast.success('Key copied to clipboard!')
+                                        }}
+                                        className="shrink-0"
+                                    >
+                                        Copy Key
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </Card>
+                            
+                            {order.status !== 'rejected' && (
+                              <div className="bg-surface/50 border-x border-b border-border/50 rounded-b-2xl px-6 py-4 mx-2 -mt-4 relative z-[-1]">
+                                <div className="flex items-center justify-between w-full max-w-sm mx-auto relative pt-4">
+                                  {/* Progress Bar Background */}
+                                  <div className="absolute top-1/2 left-0 w-full h-1 bg-border/50 -translate-y-1/2 rounded-full" />
+                                  {/* Active Progress Bar */}
+                                  <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: order.status === 'completed' ? '100%' : '50%' }}
+                                    transition={{ duration: 1, ease: 'easeOut', delay: index * 0.1 }}
+                                    className="absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                                  />
+                                  
+                                  {/* Step 1: Placed */}
+                                  <div className="relative flex flex-col items-center gap-2 z-10 w-1/3">
+                                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center ring-4 ring-surface shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+                                      <CheckCircle className="w-3 h-3 text-white" />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-foreground">Placed</span>
+                                  </div>
+
+                                  {/* Step 2: Processing */}
+                                  <div className="relative flex flex-col items-center gap-2 z-10 w-1/3">
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-surface transition-colors duration-500 delay-500 ${order.status === 'completed' || order.status === 'pending' ? 'bg-primary shadow-[0_0_10px_rgba(59,130,246,0.3)]' : 'bg-surface-hover border-2 border-border/80'}`}>
+                                      {order.status === 'completed' ? <CheckCircle className="w-3 h-3 text-white" /> : <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
+                                    </div>
+                                    <span className={`text-[10px] font-bold ${order.status === 'completed' || order.status === 'pending' ? 'text-foreground' : 'text-foreground/40'}`}>Processing</span>
+                                  </div>
+
+                                  {/* Step 3: Delivered */}
+                                  <div className="relative flex flex-col items-center gap-2 z-10 w-1/3">
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-surface transition-colors duration-500 delay-1000 ${order.status === 'completed' ? 'bg-primary shadow-[0_0_10px_rgba(59,130,246,0.3)]' : 'bg-surface-hover border-2 border-border/80'}`}>
+                                      {order.status === 'completed' && <CheckCircle className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <span className={`text-[10px] font-bold ${order.status === 'completed' ? 'text-foreground' : 'text-foreground/40'}`}>Delivered</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </motion.div>
                         ))}
                       </div>
@@ -198,6 +324,32 @@ export default function UserDashboard() {
                   <div className="flex-1 overflow-hidden">
                       <OrderChat orderId={selectedOrderId} />
                   </div>
+              </motion.div>
+          </motion.div>
+        )}
+
+        {/* Review Modal */}
+        {selectedReviewOrder && (
+          <motion.div 
+             initial={{ opacity: 0 }} 
+             animate={{ opacity: 1 }} 
+             exit={{ opacity: 0 }}
+             className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+              <motion.div 
+                  initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                  className="bg-surface border border-border/50 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col relative p-6"
+              >
+                  <button 
+                      onClick={() => setSelectedReviewOrder(null)} 
+                      className="absolute top-4 right-4 p-2 text-gray-400 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors z-10"
+                  >
+                      <X className="w-5 h-5" />
+                  </button>
+                  <h3 className="text-xl font-bold mb-4">Leave Feedback</h3>
+                  <ReviewForm productId={selectedReviewOrder.productId} orderId={selectedReviewOrder.orderId} onSuccess={() => setSelectedReviewOrder(null)} />
               </motion.div>
           </motion.div>
         )}

@@ -32,7 +32,7 @@ export default function OrderChat({ orderId }: OrderChatProps) {
       const res = await axios.get(`/api/v1/orders/${orderId}/messages`)
       return res.data as Message[]
     },
-    refetchInterval: 5000 // Poll every 5s for new messages
+    refetchInterval: 2000 // Poll every 2s for new messages
   })
 
   // Scroll to bottom on new messages
@@ -76,30 +76,30 @@ export default function OrderChat({ orderId }: OrderChatProps) {
     }
   }
 
-  if (isLoading) return <div className="p-4 text-center text-gray-500">Loading chat...</div>
+  if (isLoading) return <div className="p-4 text-center text-foreground/50">Loading chat...</div>
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-background">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages?.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-2">
+            <div className="flex flex-col items-center justify-center h-full text-foreground/30 space-y-2">
                 <MessageSquare className="w-12 h-12 opacity-50" />
                 <p>No messages yet. Start the conversation!</p>
             </div>
         )}
         
         {messages?.map((msg) => {
-            const isMe = (user as any)?.id === msg.user_id
+            const isMe = user?.id === msg.user_id
             return (
                 <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2 shadow-sm ${
                         isMe 
-                            ? 'bg-blue-600 text-white rounded-br-sm' 
-                            : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border dark:border-gray-700 rounded-bl-sm'
+                            ? 'bg-primary text-white rounded-br-sm' 
+                            : 'bg-surface border border-border/50 text-foreground rounded-bl-sm'
                     }`}>
-                        <div className={`text-xs font-bold mb-1 opacity-90 ${isMe ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                        <div className={`text-xs font-bold mb-1 opacity-90 ${isMe ? 'text-white/70' : 'text-foreground/50'}`}>
                             {msg.is_admin ? (
-                                <span className="flex items-center space-x-1 text-red-500 dark:text-red-400">
+                                <span className="flex items-center space-x-1 text-primary">
                                     <Shield className="w-3 h-3" /> <span>SUPPORT TEAM</span>
                                 </span>
                             ) : isMe ? 'You' : 'Customer'}
@@ -107,11 +107,11 @@ export default function OrderChat({ orderId }: OrderChatProps) {
                         
                         {msg.attachment_url && (
                             <div className="mb-2">
-                                <a href={`http://localhost:8000/${msg.attachment_url}`} target="_blank" rel="noopener noreferrer">
+                                <a href={`/${msg.attachment_url}`} target="_blank" rel="noopener noreferrer">
                                     <img 
-                                        src={`http://localhost:8000/${msg.attachment_url}`} 
+                                        src={`/${msg.attachment_url}`} 
                                         alt="Attachment" 
-                                        className="rounded-lg max-h-48 object-cover border border-white/20"
+                                        className="rounded-lg max-h-48 object-cover border border-border/20"
                                     />
                                 </a>
                             </div>
@@ -128,16 +128,16 @@ export default function OrderChat({ orderId }: OrderChatProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+      <div className="p-4 bg-surface border-t border-border/50">
         {selectedFile && (
-            <div className="flex items-center mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full w-fit">
-                <span className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-[200px]">{selectedFile.name}</span>
+            <div className="flex items-center mb-2 bg-surface-hover px-3 py-1 rounded-full w-fit">
+                <span className="text-xs text-foreground/70 truncate max-w-[200px]">{selectedFile.name}</span>
                 <button 
                     onClick={() => {
                         setSelectedFile(null)
                         if (fileInputRef.current) fileInputRef.current.value = ''
                     }} 
-                    className="ml-2 text-gray-400 hover:text-red-500"
+                    className="ml-2 text-foreground/40 hover:text-danger transition-colors"
                 >
                     <X className="w-4 h-4" />
                 </button>
@@ -154,7 +154,7 @@ export default function OrderChat({ orderId }: OrderChatProps) {
             <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                className="p-2 text-foreground/50 hover:text-primary transition-colors"
                 title="Attach Image"
             >
                 <Paperclip className="w-5 h-5" />
@@ -162,7 +162,7 @@ export default function OrderChat({ orderId }: OrderChatProps) {
             <div className="relative flex-1">
                 <input
                     type="text"
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-full pl-5 pr-4 py-2 bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-400"
+                    className="w-full border border-border/50 rounded-full pl-5 pr-4 py-2 bg-background text-foreground focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-foreground/40"
                     placeholder="Type a message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
@@ -172,7 +172,7 @@ export default function OrderChat({ orderId }: OrderChatProps) {
             <button 
                 type="submit" 
                 disabled={mutation.isPending || (!newMessage.trim() && !selectedFile)}
-                className="bg-blue-600 text-white p-2.5 rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-md hover:shadow-lg transform active:scale-95"
+                className="bg-primary text-white p-2.5 rounded-full hover:bg-primary-hover transition-colors disabled:opacity-50 shadow-md hover:shadow-lg transform active:scale-95"
             >
                 <Send className="w-5 h-5" />
             </button>
