@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 
 import ProtectedRoute from './components/ProtectedRoute'
 import ProductList from './pages/ProductList'
@@ -9,11 +9,22 @@ import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/AdminDashboard'
 import UserDashboard from './pages/UserDashboard'
 import ProfilePage from './pages/ProfilePage'
+import NotFoundPage from './pages/NotFoundPage'
+import OrderSuccessPage from './pages/OrderSuccessPage'
 import Layout from './components/Layout'
 import AdminRoute from './components/AdminRoute'
+import { useEffect } from 'react'
 import './App.css'
 
 function App() {
+  // Apply theme early on all pages so it persists across Layout bounds (Login/404)
+  useEffect(() => {
+    const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    const root = window.document.documentElement
+    if (isDark) root.classList.add('dark')
+    else root.classList.remove('dark')
+  }, [])
+
   return (
     <Routes>
       <Route element={<Layout />}>
@@ -39,9 +50,11 @@ function App() {
       </Route>
       
       <Route path="/login" element={<LoginPage />} />
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="/order-success" element={<OrderSuccessPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
 
 export default App
+
