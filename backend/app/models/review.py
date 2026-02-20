@@ -20,6 +20,7 @@ class Review(Base):
     product_id = Column(
         Integer, ForeignKey("store_products.id"), nullable=False, index=True
     )
+    order_id = Column(Integer, ForeignKey("store_orders.id"), nullable=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     rating = Column(

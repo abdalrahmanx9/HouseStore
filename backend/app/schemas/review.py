@@ -12,6 +12,7 @@ class ReviewBase(BaseModel):
 # Properties to receive on creation
 class ReviewCreate(ReviewBase):
     product_id: int
+    order_id: int
 
 
 # Properties to receive on update
@@ -25,6 +26,7 @@ class ReviewUpdate(BaseModel):
 class ReviewInDBBase(ReviewBase):
     id: int
     product_id: int
+    order_id: Optional[int] = None
     user_id: int
     is_verified_purchase: bool
     is_approved: bool

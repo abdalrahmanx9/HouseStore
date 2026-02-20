@@ -32,6 +32,9 @@ class Order(Base):
     coupon_code = Column(String(20), ForeignKey("store_coupons.code"), nullable=True)
     payment_method = Column(String(50), nullable=True)
     payment_proof_url = Column(String(255), nullable=True)  # [New] for web uploads
+    delivery_key = Column(
+        String(500), nullable=True
+    )  # [New] For digital licenses or keys
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

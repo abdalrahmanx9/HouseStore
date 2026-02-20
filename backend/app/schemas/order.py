@@ -11,6 +11,7 @@ class OrderBase(BaseModel):
     payment_method: Optional[str] = None
     payment_proof_url: Optional[str] = None
     coupon_code: Optional[str] = None
+    delivery_key: Optional[str] = None
 
 
 class OrderCreate(OrderBase):
@@ -22,6 +23,7 @@ class OrderUpdate(BaseModel):
     payment_method: Optional[str] = None
     payment_proof_url: Optional[str] = None
     coupon_code: Optional[str] = None
+    delivery_key: Optional[str] = None
 
 
 class Order(OrderBase):
@@ -30,6 +32,7 @@ class Order(OrderBase):
     created_at: datetime
     updated_at: Optional[datetime]
     has_unread_messages: bool = False  # [New] UI Indicator
+    has_reviewed: bool = False
 
     class Config:
         from_attributes = True
