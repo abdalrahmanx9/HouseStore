@@ -39,12 +39,10 @@ class UserInReview(BaseModel):
     id: int
     email: Optional[str] = None
     full_name: Optional[str] = None
+    picture: Optional[str] = None
 
     class Config:
         from_attributes = True
-
-
-from .user import User
 
 
 # Properties to return to client
@@ -54,3 +52,16 @@ class Review(ReviewInDBBase):
 
 class ReviewWithUser(Review):
     user: Optional[UserInReview] = None
+
+
+class ProductInReview(BaseModel):
+    id: int
+    name: str
+    image_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewWithUserProduct(ReviewWithUser):
+    product: Optional[ProductInReview] = None

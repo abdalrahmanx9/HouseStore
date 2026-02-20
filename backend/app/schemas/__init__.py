@@ -10,7 +10,14 @@ from .ticket import (
     TicketMessageCreate,
 )
 from .coupon import Coupon, CouponCreate, CouponUpdate
-from .review import Review, ReviewCreate, ReviewUpdate, ReviewWithUser
+from .review import (
+    Review,
+    ReviewCreate,
+    ReviewUpdate,
+    ReviewWithUser,
+    ReviewWithUserProduct,
+    ProductInReview,
+)
 
 __all__ = [
     "Product",
@@ -38,4 +45,6 @@ __all__ = [
     "ReviewCreate",
     "ReviewUpdate",
     "ReviewWithUser",
+    "ReviewWithUserProduct",
+    "ProductInReview",
 ]

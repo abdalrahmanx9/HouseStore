@@ -1,13 +1,33 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 
 from app import models, schemas
 from app.api import deps
 
 router = APIRouter()
+
+
+@router.get("/recent", response_model=List[schemas.ReviewWithUserProduct])
+async def read_recent_reviews(
+    db: AsyncSession = Depends(deps.get_db),
+    limit: int = 3,
+) -> Any:
+    """
+    Retrieve the most recent verified and approved reviews across all products.
+    """
+    query = (
+        select(models.Review)
+        .options(joinedload(models.Review.user), joinedload(models.Review.product))
+        .where(models.Review.is_approved, models.Review.is_verified_purchase)
+        .order_by(models.Review.created_at.desc())
+        .limit(limit)
+    )
+
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
 @router.get("/product/{product_id}", response_model=List[schemas.Review])
@@ -24,9 +44,7 @@ async def read_product_reviews(
     query = (
         select(models.Review)
         .options(selectinload(models.Review.user))
-        .where(
-            models.Review.product_id == product_id, models.Review.is_approved == True
-        )
+        .where(models.Review.product_id == product_id, models.Review.is_approved)
         .offset(skip)
         .limit(limit)
         .order_by(models.Review.created_at.desc())

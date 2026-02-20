@@ -2,13 +2,13 @@ import json
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func
 import os
+import uuid
 import aiofiles
 
 from app import crud, models, schemas
 from app.api import deps
-from app.models.product import Product
 
 router = APIRouter()
 
@@ -43,7 +43,9 @@ async def create_order(
         raise HTTPException(status_code=400, detail="Invalid items JSON")
 
     # Save payment proof
-    file_path = f"{UPLOAD_DIR}/{payment_proof.filename}"
+    ext = os.path.splitext(payment_proof.filename)[1]
+    unique_filename = f"{uuid.uuid4().hex}{ext}"
+    file_path = f"{UPLOAD_DIR}/{unique_filename}"
     async with aiofiles.open(file_path, "wb") as out_file:
         content = await payment_proof.read()
         await out_file.write(content)
@@ -159,13 +161,14 @@ async def read_orders(
     for o in orders:
         # Check for unread messages
         unread_stmt = select(models.order.Message).where(
-            models.order.Message.order_id == o.id, models.order.Message.read_at == None
+            models.order.Message.order_id == o.id,
+            models.order.Message.read_at.is_(None),
         )
 
         if current_user.is_superuser:
-            unread_stmt = unread_stmt.where(models.order.Message.is_admin == False)
+            unread_stmt = unread_stmt.where(not models.order.Message.is_admin)
         else:
-            unread_stmt = unread_stmt.where(models.order.Message.is_admin == True)
+            unread_stmt = unread_stmt.where(models.order.Message.is_admin)
 
         unread_res = await db.execute(unread_stmt.limit(1))
         has_unread = unread_res.scalar() is not None
@@ -215,7 +218,9 @@ async def create_message(
 
     attachment_url = None
     if file:
-        file_path = f"{UPLOAD_DIR}/{file.filename}"
+        ext = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        file_path = f"{UPLOAD_DIR}/{unique_filename}"
         async with aiofiles.open(file_path, "wb") as out_file:
             sys_content = await file.read()  # Rename variable to avoid conflict
             await out_file.write(sys_content)
@@ -265,20 +270,20 @@ async def read_messages(
     messages = result.all()
 
     # Mark relevant messages as read
-    from sqlalchemy import update, func
+    from sqlalchemy import update as sql_update, func
 
     now = func.now()
 
-    update_stmt = update(models.order.Message).where(
-        models.order.Message.order_id == id, models.order.Message.read_at == None
+    update_stmt = sql_update(models.order.Message).where(
+        models.order.Message.order_id == id, models.order.Message.read_at.is_(None)
     )
 
     if current_user.is_superuser:
         # Admin reads User messages
-        update_stmt = update_stmt.where(models.order.Message.is_admin == False)
+        update_stmt = update_stmt.where(not models.order.Message.is_admin)
     else:
         # User reads Admin messages
-        update_stmt = update_stmt.where(models.order.Message.is_admin == True)
+        update_stmt = update_stmt.where(models.order.Message.is_admin)
 
     await db.execute(update_stmt.values(read_at=now))
     await db.commit()
