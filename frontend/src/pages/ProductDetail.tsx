@@ -1,10 +1,11 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import { ArrowLeft, Check, X, ShieldCheck, Zap, Share2, Heart, Gamepad2, Laptop, MessageCircle, Cpu, GraduationCap, Package } from 'lucide-react'
+import { ArrowLeft, Check, X, ShieldCheck, Zap, Share2, Heart, Gamepad2, Laptop, MessageCircle, Cpu, GraduationCap, Package, Star, AlertTriangle } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import type { Review, Product } from '../types'
 import ReviewList from '../components/ReviewList'
+import ProductCard from '../components/ProductCard'
 
 import ReactMarkdown from 'react-markdown'
 import { Button } from '../components/ui/Button'
@@ -16,6 +17,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import Breadcrumbs from '../components/Breadcrumbs'
 import RecentlyViewed, { trackProductView } from '../components/RecentlyViewed'
+import { usePageMeta } from '../hooks/usePageMeta'
 
 const CATEGORY_STYLES: Record<string, { gradient: string, Icon: any }> = {
   'games':        { gradient: 'from-violet-600/30 via-purple-500/20 to-fuchsia-500/10', Icon: Gamepad2 },
@@ -53,13 +55,35 @@ export default function ProductDetail() {
     enabled: !!id,
   })
 
+  const { data: relatedProducts } = useQuery<Product[]>({
+    queryKey: ['related-products', id],
+    queryFn: async () => {
+        const res = await axios.get(`/api/v1/products/${id}/related`)
+        return res.data
+    },
+    enabled: !!id,
+  })
+
+  const { data: ratingData } = useQuery<{ average: number; total: number; distribution: Record<string, number> }>({
+    queryKey: ['product-rating', id],
+    queryFn: async () => {
+        const res = await axios.get(`/api/v1/products/${id}/rating`)
+        return res.data
+    },
+    enabled: !!id,
+  })
+
+  usePageMeta({
+    title: product?.name,
+    description: product?.description?.slice(0, 160) || `Buy ${product?.name || 'this product'} at House Store`,
+    ogTitle: product?.name,
+    ogDescription: product?.description?.slice(0, 160),
+    ogImage: product?.image_url,
+  })
+
   useEffect(() => {
     if (product) {
-      document.title = `${product.name} | House Store`
       trackProductView(product)
-    }
-    return () => {
-      document.title = 'House Store'
     }
   }, [product])
   
@@ -244,13 +268,17 @@ export default function ProductDetail() {
                         {product.price}
                         <span className="text-xl text-gray-500 ml-1 align-top relative top-3">EGP</span>
                     </p>
-                    {product.stock_count > 0 ? (
+                    {product.stock_count > 10 ? (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/20 text-success text-sm font-bold">
-                          <Check className="w-3 h-3" /> Ready for Deployment
+                          <Check className="w-3 h-3" /> In Stock
+                        </div>
+                    ) : product.stock_count > 0 ? (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-sm font-bold">
+                          <AlertTriangle className="w-3 h-3" /> Low Stock &mdash; {product.stock_count} left
                         </div>
                     ) : (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-danger/20 text-danger text-sm font-bold">
-                          <X className="w-3 h-3" /> Systems Offline
+                          <X className="w-3 h-3" /> Out of Stock
                         </div>
                     )}
                 </div>
@@ -303,18 +331,74 @@ export default function ProductDetail() {
            viewport={{ once: true }}
            className="mt-32 w-full max-w-[1920px] mx-auto border-t border-border/30 pt-16"
         >
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 px-2">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12 px-2">
                <div>
                  <h2 className="text-4xl md:text-5xl font-black text-foreground font-display uppercase tracking-tight mb-2">Customer Reviews</h2>
                  <p className="text-xl text-gray-400 font-medium">Verified purchases from {reviews?.length || 0} customers.</p>
                </div>
+
+               {/* Rating Breakdown */}
+               {ratingData && ratingData.total > 0 && (
+                 <div className="bg-surface border border-border/50 rounded-2xl p-6 min-w-[280px] shrink-0">
+                   <div className="flex items-center gap-4 mb-4">
+                     <span className="text-5xl font-black text-foreground tracking-tighter">{ratingData.average.toFixed(1)}</span>
+                     <div>
+                       <div className="flex text-yellow-500 mb-1">
+                         {[1, 2, 3, 4, 5].map(s => (
+                           <Star key={s} className={`w-5 h-5 ${s <= Math.round(ratingData.average) ? 'fill-current' : 'text-gray-600'}`} />
+                         ))}
+                       </div>
+                       <p className="text-sm text-gray-400">{ratingData.total} review{ratingData.total !== 1 ? 's' : ''}</p>
+                     </div>
+                   </div>
+                   <div className="space-y-2">
+                     {[5, 4, 3, 2, 1].map(star => {
+                       const count = ratingData.distribution[String(star)] || 0
+                       const pct = ratingData.total > 0 ? (count / ratingData.total) * 100 : 0
+                       return (
+                         <div key={star} className="flex items-center gap-2 text-sm">
+                           <span className="w-6 text-right text-gray-400 font-medium">{star}</span>
+                           <Star className="w-3 h-3 text-yellow-500 fill-current shrink-0" />
+                           <div className="flex-1 h-2 bg-surface-hover rounded-full overflow-hidden">
+                             <motion.div
+                               initial={{ width: 0 }}
+                               whileInView={{ width: `${pct}%` }}
+                               viewport={{ once: true }}
+                               transition={{ duration: 0.8, ease: 'easeOut' }}
+                               className="h-full bg-yellow-500 rounded-full"
+                             />
+                           </div>
+                           <span className="w-8 text-right text-gray-500 text-xs">{count}</span>
+                         </div>
+                       )
+                     })}
+                   </div>
+                 </div>
+               )}
             </div>
             
-            {/* Reviews display area could be upgraded in ReviewList.tsx, but we render it here */}
+            {/* Reviews display area */}
             <div className="max-w-4xl px-2">
                <ReviewList reviews={reviews || []} />
             </div>
         </motion.div>
+
+        {/* Related Products Section */}
+        {relatedProducts && relatedProducts.length > 0 && (
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-24 w-full max-w-[1920px] mx-auto border-t border-border/30 pt-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-black text-foreground font-display uppercase tracking-tight mb-8 px-2">You May Also Like</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+              {relatedProducts.map(rp => (
+                <ProductCard key={rp.id} product={rp} />
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Fullscreen Portrait Media Modal */}

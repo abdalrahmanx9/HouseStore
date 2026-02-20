@@ -6,7 +6,7 @@ import axios from 'axios'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, CreditCard, ShieldCheck, CheckCircle, Sparkles, ArrowRight, Wallet } from 'lucide-react'
+import { Lock, CreditCard, ShieldCheck, CheckCircle, Sparkles, ArrowRight, Wallet, Shield, Truck, RefreshCw } from 'lucide-react'
 
 export default function Checkout() {
   const { cart, total, clearCart } = useCart()
@@ -111,36 +111,39 @@ export default function Checkout() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-28 max-w-2xl bg-background min-h-screen">
+    <div className="container mx-auto px-4 py-8 pt-28 max-w-5xl bg-background min-h-screen">
       <h1 className="text-3xl font-bold mb-8 text-foreground font-display uppercase tracking-tight">Checkout</h1>
       
-      <div className="mb-10 w-full mx-auto relative px-2">
-        <div className="absolute top-1/2 left-0 w-full h-1 bg-surface-hover -translate-y-1/2 rounded-full z-0" />
-        <motion.div 
-          className="absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 rounded-full z-0"
-          initial={{ width: '0%' }}
-          animate={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
-          transition={{ duration: 0.3 }}
-        />
-        <div className="flex justify-between relative z-10 w-full">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex flex-col items-center gap-2">
-              <div 
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 shadow-md ${
-                  s < step ? 'bg-primary text-white' : s === step ? 'bg-primary text-white ring-4 ring-primary/20' : 'bg-surface border-2 border-border/50 text-foreground/50'
-                }`}
-              >
-                {s < step ? <CheckCircle className="w-4 h-4" /> : s}
-              </div>
-              <span className={`text-xs font-semibold ${s <= step ? 'text-foreground' : 'text-foreground/40'}`}>
-                {s === 1 ? 'Details' : s === 2 ? 'Payment' : 'Review'}
-              </span>
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Main checkout flow */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-10 w-full mx-auto relative px-2">
+            <div className="absolute top-1/2 left-0 w-full h-1 bg-surface-hover -translate-y-1/2 rounded-full z-0" />
+            <motion.div 
+              className="absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 rounded-full z-0"
+              initial={{ width: '0%' }}
+              animate={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
+              transition={{ duration: 0.3 }}
+            />
+            <div className="flex justify-between relative z-10 w-full">
+              {[1, 2, 3].map((s) => (
+                <div key={s} className="flex flex-col items-center gap-2">
+                  <div 
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 shadow-md ${
+                      s < step ? 'bg-primary text-white' : s === step ? 'bg-primary text-white ring-4 ring-primary/20' : 'bg-surface border-2 border-border/50 text-foreground/50'
+                    }`}
+                  >
+                    {s < step ? <CheckCircle className="w-4 h-4" /> : s}
+                  </div>
+                  <span className={`text-xs font-semibold ${s <= step ? 'text-foreground' : 'text-foreground/40'}`}>
+                    {s === 1 ? 'Details' : s === 2 ? 'Payment' : 'Review'}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      <div className="bg-surface border border-border/50 rounded-3xl shadow-xl overflow-hidden relative min-h-[450px]">
+          <div className="bg-surface border border-border/50 rounded-3xl shadow-xl overflow-hidden relative min-h-[450px]">
         <AnimatePresence mode="wait">
           {step === 1 && !user && (
             <motion.div 
@@ -311,6 +314,63 @@ export default function Checkout() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Trust Badges */}
+      <div className="mt-6 grid grid-cols-3 gap-3">
+        {[
+          { icon: Shield, label: 'Secure Payment', desc: 'Encrypted transfer' },
+          { icon: Truck, label: 'Fast Delivery', desc: 'Instant or 24h' },
+          { icon: RefreshCw, label: 'Support', desc: '24/7 assistance' },
+        ].map(badge => (
+          <div key={badge.label} className="flex flex-col items-center text-center p-3 bg-surface/50 border border-border/30 rounded-xl">
+            <badge.icon className="w-5 h-5 text-primary mb-1.5" />
+            <span className="text-xs font-semibold text-foreground">{badge.label}</span>
+            <span className="text-[10px] text-gray-500">{badge.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Sticky Order Summary Sidebar */}
+    <div className="w-full lg:w-80 shrink-0">
+      <div className="lg:sticky lg:top-28 space-y-4">
+        <div className="bg-surface border border-border/50 rounded-2xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-foreground mb-4">Order Summary</h3>
+          <div className="space-y-3 mb-4">
+            {cart.map(item => (
+              <div key={item.id} className="flex justify-between text-sm">
+                <span className="text-foreground/70 truncate mr-2">
+                  {item.name} <span className="text-gray-500">x{item.quantity}</span>
+                </span>
+                <span className="font-semibold text-foreground whitespace-nowrap">{(item.price * item.quantity).toFixed(2)} EGP</span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border/50 pt-3 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Subtotal</span>
+              <span className="text-foreground font-medium">{total.toFixed(2)} EGP</span>
+            </div>
+            {coupon && (
+              <div className="flex justify-between text-sm">
+                <span className="text-success">Discount ({coupon.code})</span>
+                <span className="text-success font-medium">-{discountAmount.toFixed(2)} EGP</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-black pt-2 border-t border-border/30">
+              <span className="text-foreground">Total</span>
+              <span className="text-primary">{finalTotal.toFixed(2)} EGP</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 text-xs text-gray-500 py-2">
+          <Lock className="w-3 h-3" />
+          <span>Secure checkout &middot; SSL encrypted</span>
+        </div>
+      </div>
+    </div>
+  </div>
     </div>
   )
 }

@@ -50,6 +50,7 @@ import { Skeleton } from '../components/ui/Skeleton'
 import { TypewriterText } from '../components/ui/TypewriterText'
 
 import { motion } from 'framer-motion'
+import { usePageMeta } from '../hooks/usePageMeta'
 
 export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -57,6 +58,11 @@ export default function ProductList() {
   const [sortBy, setSortBy] = useState('default')
   const [visibleCount, setVisibleCount] = useState(12)
   const location = useLocation()
+
+  usePageMeta({
+    title: 'Digital Store',
+    description: 'Discover premium software, games, and digital assets at House Store. Secure checkout, instant delivery.',
+  })
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
