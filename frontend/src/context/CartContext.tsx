@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { Product } from '../types'
 
 export interface CartItem extends Product {
@@ -17,11 +17,36 @@ interface CartContextType {
   closeCart: () => void
 }
 
+const CART_STORAGE_KEY = 'house_store_cart'
+
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+function loadCart(): CartItem[] {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY)
+    if (saved) return JSON.parse(saved)
+  } catch {
+    // ignore parse errors
+  }
+  return []
+}
+
+function saveCart(cart: CartItem[]) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<CartItem[]>(loadCart)
   const [isCartOpen, setIsCartOpen] = useState(false)
+
+  // Persist cart to localStorage on change
+  useEffect(() => {
+    saveCart(cart)
+  }, [cart])
 
   const addToCart = (product: Product) => {
     setCart(prev => {
