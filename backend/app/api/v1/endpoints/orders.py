@@ -166,12 +166,20 @@ async def read_orders(
         )
 
         if current_user.is_superuser:
-            unread_stmt = unread_stmt.where(not models.order.Message.is_admin)
+            unread_stmt = unread_stmt.where(models.order.Message.is_admin == False)
         else:
-            unread_stmt = unread_stmt.where(models.order.Message.is_admin)
+            unread_stmt = unread_stmt.where(models.order.Message.is_admin == True)
 
         unread_res = await db.execute(unread_stmt.limit(1))
         has_unread = unread_res.scalar() is not None
+
+        # Check if user has already reviewed this order
+        reviewed_stmt = select(models.Review).where(
+            models.Review.user_id == o.user_id,
+            models.Review.order_id == o.id,
+        )
+        reviewed_res = await db.execute(reviewed_stmt.limit(1))
+        has_reviewed = reviewed_res.scalar() is not None
 
         o_dict = {
             "id": o.id,
@@ -188,6 +196,8 @@ async def read_orders(
             "delivered_at": o.delivered_at,
             "user_id": o.user_id,
             "has_unread_messages": has_unread,
+            "has_reviewed": has_reviewed,
+            "delivery_key": o.delivery_key,
         }
         order_responses.append(o_dict)
 
@@ -280,10 +290,10 @@ async def read_messages(
 
     if current_user.is_superuser:
         # Admin reads User messages
-        update_stmt = update_stmt.where(not models.order.Message.is_admin)
+        update_stmt = update_stmt.where(models.order.Message.is_admin == False)
     else:
         # User reads Admin messages
-        update_stmt = update_stmt.where(models.order.Message.is_admin)
+        update_stmt = update_stmt.where(models.order.Message.is_admin == True)
 
     await db.execute(update_stmt.values(read_at=now))
     await db.commit()

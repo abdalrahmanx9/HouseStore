@@ -33,12 +33,17 @@ import os
 
 app.include_router(api_router, prefix=config.settings.API_V1_STR)
 
-# Mount Uploads for Payment Proofs
+# Mount Uploads for Payment Proofs (Legacy)
 UPLOAD_DIR = "uploads"
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
-
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+# Mount Uploads for Avatars and Products (New file_utils)
+UPLOADED_FILES_DIR = "uploaded_files"
+if not os.path.exists(UPLOADED_FILES_DIR):
+    os.makedirs(UPLOADED_FILES_DIR)
+app.mount("/files", StaticFiles(directory=UPLOADED_FILES_DIR), name="files")
 
 
 @app.get("/")

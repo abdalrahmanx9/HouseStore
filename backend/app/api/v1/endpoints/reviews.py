@@ -85,16 +85,22 @@ async def create_review(
     """
     Create a new review.
     """
-    # Check if user already reviewed this product? (Optional: prevent spam)
-    # For now, allow multiple reviews or assume frontend handles simple checks.
+    # Check if user already reviewed this order
+    stmt_review = select(models.Review).where(
+        models.Review.user_id == current_user.id,
+        models.Review.order_id == review_in.order_id,
+    )
+    existing_review = await db.execute(stmt_review)
+    if existing_review.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400, detail="You have already reviewed this order."
+        )
 
-    # Check if verified purchase (Has user bought this product and order is completed?)
-    # This is a bit complex query.
-    # EXISTS(SELECT 1 FROM orders WHERE user_id = :uid AND product_id = :pid AND status = 'completed')
-
+    # Check if verified purchase (Have they bought this product via this order?)
     verified = False
     query = select(models.Order).where(
         models.Order.user_id == current_user.id,
+        models.Order.id == review_in.order_id,
         models.Order.product_id == review_in.product_id,
         models.Order.status == "completed",
     )
@@ -104,6 +110,7 @@ async def create_review(
 
     review = models.Review(
         product_id=review_in.product_id,
+        order_id=review_in.order_id,
         user_id=current_user.id,
         rating=review_in.rating,
         comment=review_in.comment,

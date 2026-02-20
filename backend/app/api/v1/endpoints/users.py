@@ -29,3 +29,25 @@ async def upload_avatar(
     await db.refresh(current_user)
 
     return current_user
+
+
+@router.put("/me", response_model=schemas.User)
+async def update_user_me(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    user_in: schemas.UserUpdate,
+    current_user: models.User = Depends(deps.get_current_active_user),
+):
+    if user_in.full_name is not None:
+        current_user.full_name = user_in.full_name
+    if user_in.email is not None:
+        current_user.email = user_in.email
+    # Note: password updates should ideally be handled carefully (hashed), but per user requests this is for basic data persistence
+    if user_in.password is not None:
+        from app.core.security import get_password_hash
+
+        current_user.hashed_password = get_password_hash(user_in.password)
+
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
