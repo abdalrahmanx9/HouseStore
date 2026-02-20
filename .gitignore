@@ -30,3 +30,7 @@ backend/uploads/payment_proofs/*
 
 # Logs
 *.log
+backend_logs.txt
+backend/uploaded_files/
+frontend/eslint.json
+frontend/eslint_utf8.json
