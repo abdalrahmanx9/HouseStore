@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/Login'
+
 import ProtectedRoute from './components/ProtectedRoute'
 import ProductList from './pages/ProductList'
 import ProductDetail from './pages/ProductDetail'
@@ -8,6 +8,7 @@ import Checkout from './pages/Checkout'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/AdminDashboard'
 import UserDashboard from './pages/UserDashboard'
+import ProfilePage from './pages/ProfilePage'
 import Layout from './components/Layout'
 import AdminRoute from './components/AdminRoute'
 import './App.css'
@@ -20,7 +21,6 @@ function App() {
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/login" element={<LoginPage />} />
         <Route path="/admin" element={
           <AdminRoute>
             <AdminDashboard />
@@ -31,9 +31,14 @@ function App() {
             <UserDashboard />
             </ProtectedRoute>
         } />
+        <Route path="/profile" element={
+            <ProtectedRoute>
+            <ProfilePage />
+            </ProtectedRoute>
+        } />
       </Route>
       
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )
