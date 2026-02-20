@@ -268,7 +268,7 @@ export default function ProductDetail() {
                         {product.price}
                         <span className="text-xl text-gray-500 ml-1 align-top relative top-3">EGP</span>
                     </p>
-                    {product.stock_count > 10 ? (
+                    {product.stock_count > 5 ? (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/20 text-success text-sm font-bold">
                           <Check className="w-3 h-3" /> In Stock
                         </div>

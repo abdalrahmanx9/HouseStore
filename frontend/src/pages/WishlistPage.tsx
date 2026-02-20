@@ -7,14 +7,15 @@ import { toast } from 'sonner';
 import { useCart } from '../context/CartContext';
 
 interface WishlistItem {
-  _id: string;
+  id: number;
+  product_id: number;
   product: {
-    _id: string;
+    id: number;
     name: string;
     price: number;
-    image: string;
+    image_url?: string;
     category: string;
-    stock: number;
+    stock_count: number;
   };
 }
 
@@ -31,7 +32,7 @@ export default function WishlistPage() {
   });
 
   const removeMutation = useMutation({
-    mutationFn: (productId: string) => axios.delete(`/api/v1/wishlist/${productId}`),
+    mutationFn: (productId: number) => axios.delete(`/api/v1/wishlist/${productId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
       toast.success('Removed from wishlist');
@@ -42,17 +43,17 @@ export default function WishlistPage() {
   });
 
   const handleAddToCart = (item: WishlistItem) => {
-    if (item.product.stock <= 0) {
+    if (item.product.stock_count <= 0) {
       toast.error('This product is out of stock');
       return;
     }
     addToCart({
-      id: parseInt(item.product._id, 10),
+      id: item.product.id,
       name: item.product.name,
       price: item.product.price,
-      image_url: item.product.image,
+      image_url: item.product.image_url,
       category: item.product.category,
-      stock_count: item.product.stock,
+      stock_count: item.product.stock_count,
     } as any);
     toast.success(`${item.product.name} added to cart`);
   };
@@ -87,7 +88,7 @@ export default function WishlistPage() {
             Browse products and save your favorites here.
           </p>
           <Link
-            to="/products"
+            to="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
             Browse Products
@@ -108,7 +109,7 @@ export default function WishlistPage() {
         <AnimatePresence mode="popLayout">
           {wishlist.map((item) => (
             <motion.div
-              key={item._id}
+              key={item.id}
               layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -116,13 +117,19 @@ export default function WishlistPage() {
               transition={{ duration: 0.25 }}
               className="rounded-xl bg-surface border border-border overflow-hidden hover:bg-surface-hover transition-colors group"
             >
-              <div className="aspect-square overflow-hidden bg-surface">
-                <img
-                  src={item.product.image}
-                  alt={item.product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
+              <Link to={`/products/${item.product.id}`} className="aspect-square overflow-hidden bg-surface block">
+                {item.product.image_url ? (
+                  <img
+                    src={item.product.image_url}
+                    alt={item.product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-surface-hover">
+                    <Heart size={48} className="text-foreground/20" />
+                  </div>
+                )}
+              </Link>
 
               <div className="p-4 space-y-3">
                 <div>
@@ -138,26 +145,26 @@ export default function WishlistPage() {
                   </span>
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      item.product.stock > 0
+                      item.product.stock_count > 0
                         ? 'bg-green-500/10 text-success'
                         : 'bg-red-500/10 text-danger'
                     }`}
                   >
-                    {item.product.stock > 0 ? `${item.product.stock} in stock` : 'Out of stock'}
+                    {item.product.stock_count > 0 ? `${item.product.stock_count} in stock` : 'Out of stock'}
                   </span>
                 </div>
 
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => handleAddToCart(item)}
-                    disabled={item.product.stock <= 0}
+                    disabled={item.product.stock_count <= 0}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <ShoppingCart size={15} />
                     Add to Cart
                   </button>
                   <button
-                    onClick={() => removeMutation.mutate(item.product._id)}
+                    onClick={() => removeMutation.mutate(item.product.id)}
                     disabled={removeMutation.isPending}
                     className="flex items-center justify-center px-3 py-2 rounded-lg border border-border text-danger hover:bg-red-500/10 transition-colors disabled:opacity-40"
                     title="Remove from wishlist"

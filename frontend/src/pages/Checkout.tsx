@@ -117,17 +117,17 @@ export default function Checkout() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main checkout flow */}
         <div className="flex-1 min-w-0">
-          <div className="mb-10 w-full mx-auto relative px-2">
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-surface-hover -translate-y-1/2 rounded-full z-0" />
+          <div className="mb-12 w-full mx-auto relative px-2 md:px-6">
+            <div className="absolute top-4 left-6 right-6 h-1 bg-surface-hover rounded-full z-0" />
             <motion.div 
-              className="absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 rounded-full z-0"
+              className="absolute top-4 left-6 h-1 bg-primary rounded-full z-0"
               initial={{ width: '0%' }}
               animate={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
               transition={{ duration: 0.3 }}
             />
             <div className="flex justify-between relative z-10 w-full">
               {[1, 2, 3].map((s) => (
-                <div key={s} className="flex flex-col items-center gap-2">
+                <div key={s} className="flex flex-col items-center relative">
                   <div 
                     className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 shadow-md ${
                       s < step ? 'bg-primary text-white' : s === step ? 'bg-primary text-white ring-4 ring-primary/20' : 'bg-surface border-2 border-border/50 text-foreground/50'
@@ -135,7 +135,7 @@ export default function Checkout() {
                   >
                     {s < step ? <CheckCircle className="w-4 h-4" /> : s}
                   </div>
-                  <span className={`text-xs font-semibold ${s <= step ? 'text-foreground' : 'text-foreground/40'}`}>
+                  <span className={`absolute top-10 whitespace-nowrap text-xs font-semibold ${s <= step ? 'text-foreground' : 'text-foreground/40'}`}>
                     {s === 1 ? 'Details' : s === 2 ? 'Payment' : 'Review'}
                   </span>
                 </div>

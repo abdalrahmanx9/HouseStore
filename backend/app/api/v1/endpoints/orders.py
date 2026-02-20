@@ -43,7 +43,8 @@ async def create_order(
         raise HTTPException(status_code=400, detail="Invalid items JSON")
 
     # Save payment proof
-    ext = os.path.splitext(payment_proof.filename)[1]
+    filename = payment_proof.filename if payment_proof.filename else "proof.png"
+    ext = os.path.splitext(filename)[1]
     unique_filename = f"{uuid.uuid4().hex}{ext}"
     file_path = f"{UPLOAD_DIR}/{unique_filename}"
     async with aiofiles.open(file_path, "wb") as out_file:

@@ -31,10 +31,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401 && window.location.pathname !== '/login') {
-          console.warn("Session expired or unauthorized, logging out.")
+        if (error.response?.status === 401) {
+          console.warn("Session expired or unauthorized.")
           setUser(null)
-          window.location.href = '/login'
+          
+          // Only redirect if they are on a protected route
+          const protectedRoutes = ['/profile', '/dashboard', '/admin', '/checkout', '/wishlist']
+          if (protectedRoutes.some(route => window.location.pathname.startsWith(route))) {
+             window.location.href = '/login'
+          }
         }
         return Promise.reject(error)
       }

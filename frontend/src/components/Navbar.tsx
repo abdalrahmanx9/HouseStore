@@ -112,12 +112,12 @@ export function Navbar() {
               {/* Search trigger */}
               <button
                 onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/60 border border-border/50 text-foreground/50 hover:text-foreground hover:border-primary/40 transition-all text-sm"
+                className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-full bg-background border border-border/50 hover:border-primary/50 hover:bg-surface-hover hover:shadow-[0_0_15px_-3px_var(--color-primary)] transition-all group"
                 title="Search (Ctrl+K)"
               >
-                <Search className="w-4 h-4" />
-                <span className="hidden lg:inline text-xs">Search...</span>
-                <kbd className="hidden lg:inline text-[10px] font-mono bg-surface-hover px-1.5 py-0.5 rounded border border-border/50 text-foreground/40">Ctrl+K</kbd>
+                <Search className="w-4 h-4 text-foreground/50 group-hover:text-primary transition-colors" />
+                <span className="hidden lg:inline text-sm text-foreground/50 group-hover:text-foreground transition-colors mr-2 font-medium">Search products...</span>
+                <kbd className="hidden lg:inline text-[10px] font-bold font-mono bg-surface border border-border/50 text-foreground/50 px-1.5 py-0.5 rounded-md group-hover:border-primary/30 transition-colors">Ctrl+K</kbd>
               </button>
 
               {/* Wishlist */}
@@ -159,28 +159,28 @@ export function Navbar() {
 
               {/* Desktop nav links */}
               {user ? (
-                  <div className="hidden md:flex items-center space-x-2 md:space-x-3 ml-2 border-l border-border/50 pl-2">
+                  <div className="hidden lg:flex items-center space-x-2 xl:space-x-3 ml-2 border-l border-border/50 pl-2">
                       <Link to="/profile">
-                          <Button variant="ghost" size="sm" className="rounded-full">Profile</Button>
+                          <Button variant="ghost" size="sm" className="rounded-full font-medium">Profile</Button>
                       </Link>
                       {!user.is_superuser && (
                           <Link to="/dashboard">
-                              <Button variant="ghost" size="sm" className="rounded-full">Orders</Button>
+                              <Button variant="ghost" size="sm" className="rounded-full font-medium">Orders</Button>
                           </Link>
                       )}
                       {user.is_superuser && (
                           <Link to="/admin">
-                            <Button variant="secondary" size="sm" className="gap-2 rounded-full">
+                            <Button variant="secondary" size="sm" className="gap-2 rounded-full font-bold shadow-sm">
                               <Shield className="w-4 h-4" /> Admin
                             </Button>
                           </Link>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => logout()} className="rounded-full">
+                      <Button variant="outline" size="sm" onClick={() => logout()} className="rounded-full font-medium hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-colors">
                           Logout
                       </Button>
                   </div>
               ) : (
-                  <Link to="/login" className="ml-2 hidden md:block">
+                  <Link to="/login" className="ml-2 hidden lg:block border-l border-border/50 pl-2">
                       <Button size="sm" className="gap-2 rounded-full px-6 font-bold shadow-md shadow-primary/20 transition-transform active:scale-95">
                           <LogIn className="w-4 h-4" />
                           Login
@@ -191,7 +191,7 @@ export function Navbar() {
               {/* Mobile hamburger */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 rounded-full hover:bg-surface text-foreground/70 hover:text-foreground transition-colors"
+                className="lg:hidden p-2 rounded-full hover:bg-surface text-foreground/70 hover:text-foreground transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>

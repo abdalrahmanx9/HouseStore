@@ -138,6 +138,7 @@ export default function AdminDashboard() {
   const [deliveryKeyInput, setDeliveryKeyInput] = useState('')
   const [selectedStockProductId, setSelectedStockProductId] = useState<number | null>(null)
   const [selectedStockProductName, setSelectedStockProductName] = useState('')
+  const [selectedStockProductDelivery, setSelectedStockProductDelivery] = useState('')
 
   // Product list for stock tab product selector
   const { data: allProducts } = useQuery({
@@ -473,7 +474,11 @@ export default function AdminDashboard() {
                             {allProducts?.map(p => (
                               <button
                                 key={p.id}
-                                onClick={() => { setSelectedStockProductId(p.id); setSelectedStockProductName(p.name) }}
+                                onClick={() => { 
+                                  setSelectedStockProductId(p.id)
+                                  setSelectedStockProductName(p.name)
+                                  setSelectedStockProductDelivery(p.delivery_type || 'manual')
+                                }}
                                 className={`text-left p-4 rounded-xl border transition-all ${
                                   selectedStockProductId === p.id
                                     ? 'border-primary bg-primary/10 shadow-sm'
@@ -492,7 +497,11 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         {selectedStockProductId && (
-                          <StockManager productId={selectedStockProductId} productName={selectedStockProductName} />
+                          <StockManager 
+                            productId={selectedStockProductId} 
+                            productName={selectedStockProductName} 
+                            deliveryType={selectedStockProductDelivery} 
+                          />
                         )}
                       </div>
                    ) : activeTab === 'tickets' ? (

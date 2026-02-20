@@ -16,29 +16,29 @@ import {
 import RevenueChart from './RevenueChart';
 
 interface Stats {
-  totalRevenue: number;
-  pendingOrders: number;
-  totalUsers: number;
-  completedOrders: number;
-  activeProducts: number;
-  openTickets: number;
-  totalReviews: number;
-  rejectedOrders: number;
+  total_revenue: number;
+  pending_orders: number;
+  total_users: number;
+  completed_orders: number;
+  active_products: number;
+  open_tickets: number;
+  total_reviews: number;
+  rejected_orders: number;
 }
 
 interface ProductAnalytics {
-  _id: string;
+  id: number;
   name: string;
   category: string;
-  totalOrders: number;
-  revenue: number;
-  avgRating: number;
-  stock: number;
+  total_orders: number;
+  total_revenue: number;
+  average_rating: number | null;
+  stock_count: number;
 }
 
 type SortKey = keyof Pick<
   ProductAnalytics,
-  'name' | 'category' | 'totalOrders' | 'revenue' | 'avgRating' | 'stock'
+  'name' | 'category' | 'total_orders' | 'total_revenue' | 'average_rating' | 'stock_count'
 >;
 
 function AnimatedCounter({ value }: { value: number | string }) {
@@ -69,7 +69,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function AnalyticsTab() {
-  const [sortKey, setSortKey] = useState<SortKey>('revenue');
+  const [sortKey, setSortKey] = useState<SortKey>('total_revenue');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
@@ -121,10 +121,7 @@ export default function AnalyticsTab() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch {
-      console.error(`Failed to export ${type}`);
-    }
-  };
+    : [];
 
   const kpis: {
     label: string;
@@ -135,49 +132,49 @@ export default function AnalyticsTab() {
     ? [
         {
           label: 'Total Revenue',
-          value: `${stats.totalRevenue.toLocaleString()} EGP`,
+          value: `${(stats.total_revenue || 0).toLocaleString()} EGP`,
           icon: <DollarSign size={22} />,
           accent: 'text-success',
         },
         {
           label: 'Pending Orders',
-          value: stats.pendingOrders,
+          value: stats.pending_orders,
           icon: <ShoppingBag size={22} />,
           accent: 'text-yellow-500',
         },
         {
           label: 'Total Users',
-          value: stats.totalUsers,
+          value: stats.total_users,
           icon: <Users size={22} />,
           accent: 'text-primary',
         },
         {
           label: 'Completed Orders',
-          value: stats.completedOrders,
+          value: stats.completed_orders,
           icon: <TrendingUp size={22} />,
           accent: 'text-success',
         },
         {
           label: 'Active Products',
-          value: stats.activeProducts,
+          value: stats.active_products,
           icon: <Package size={22} />,
           accent: 'text-primary',
         },
         {
           label: 'Open Tickets',
-          value: stats.openTickets,
+          value: stats.open_tickets,
           icon: <MessageCircle size={22} />,
           accent: 'text-yellow-500',
         },
         {
           label: 'Total Reviews',
-          value: stats.totalReviews,
+          value: stats.total_reviews,
           icon: <Star size={22} />,
           accent: 'text-primary',
         },
         {
           label: 'Rejected Orders',
-          value: stats.rejectedOrders,
+          value: stats.rejected_orders,
           icon: <AlertTriangle size={22} />,
           accent: 'text-danger',
         },
@@ -187,10 +184,10 @@ export default function AnalyticsTab() {
   const columnHeaders: { key: SortKey; label: string }[] = [
     { key: 'name', label: 'Name' },
     { key: 'category', label: 'Category' },
-    { key: 'totalOrders', label: 'Total Orders' },
-    { key: 'revenue', label: 'Revenue (EGP)' },
-    { key: 'avgRating', label: 'Avg Rating' },
-    { key: 'stock', label: 'Stock Available' },
+    { key: 'total_orders', label: 'Total Orders' },
+    { key: 'total_revenue', label: 'Revenue (EGP)' },
+    { key: 'average_rating', label: 'Avg Rating' },
+    { key: 'stock_count', label: 'Stock Available' },
   ];
 
   return (
@@ -283,24 +280,24 @@ export default function AnalyticsTab() {
               <tbody>
                 {sortedProducts.map((product) => (
                   <tr
-                    key={product._id}
+                    key={product.id}
                     className="border-b border-border last:border-b-0 hover:bg-surface-hover transition-colors"
                   >
                     <td className="px-5 py-3 text-foreground font-medium">{product.name}</td>
                     <td className="px-5 py-3 text-foreground/70">{product.category}</td>
-                    <td className="px-5 py-3 text-foreground">{product.totalOrders}</td>
+                    <td className="px-5 py-3 text-foreground">{product.total_orders}</td>
                     <td className="px-5 py-3 text-foreground">
-                      {product.revenue.toLocaleString()} EGP
+                      {(product.total_revenue || 0).toLocaleString()} EGP
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
-                        <StarRating rating={product.avgRating} />
+                        <StarRating rating={product.average_rating || 0} />
                         <span className="text-foreground/50 text-xs">
-                          ({product.avgRating.toFixed(1)})
+                          ({product.average_rating?.toFixed(1) || '0.0'})
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-foreground">{product.stock}</td>
+                    <td className="px-5 py-3 text-foreground">{product.stock_count}</td>
                   </tr>
                 ))}
               </tbody>

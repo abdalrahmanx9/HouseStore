@@ -291,13 +291,14 @@ export default function ProductList() {
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
-              className="bg-surface border border-border/50 rounded-xl px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+              className="bg-surface border border-border/50 rounded-xl px-4 py-2.5 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer pr-10 relative shadow-sm hover:border-primary/50 transition-colors"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236b7280\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1rem' }}
             >
-              <option value="default">Default</option>
-              <option value="price_asc">Price: Low → High</option>
-              <option value="price_desc">Price: High → Low</option>
-              <option value="stock">Lowest Stock</option>
-              <option value="name">Name: A → Z</option>
+              <option value="default" className="bg-surface text-foreground font-medium py-2">Default Sort</option>
+              <option value="price_asc" className="bg-surface text-foreground font-medium py-2">Price: Low → High</option>
+              <option value="price_desc" className="bg-surface text-foreground font-medium py-2">Price: High → Low</option>
+              <option value="stock" className="bg-surface text-foreground font-medium py-2">Lowest Stock</option>
+              <option value="name" className="bg-surface text-foreground font-medium py-2">Name: A → Z</option>
             </select>
           </div>
         </div>

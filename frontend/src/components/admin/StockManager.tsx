@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 interface StockManagerProps {
   productId: number
   productName: string
+  deliveryType?: string
 }
 
 interface StockItem {
@@ -17,10 +18,11 @@ interface StockItem {
   is_sold: boolean
 }
 
-export default function StockManager({ productId, productName }: StockManagerProps) {
+export default function StockManager({ productId, productName, deliveryType = 'manual' }: StockManagerProps) {
   const queryClient = useQueryClient()
   const [includeSold, setIncludeSold] = useState(false)
   const [newStock, setNewStock] = useState('')
+  const [manualCount, setManualCount] = useState<number | ''>('')
   const [copiedId, setCopiedId] = useState<number | null>(null)
 
   // ── Fetch stock items ──────────────────────────────────────────────
@@ -73,6 +75,18 @@ export default function StockManager({ productId, productName }: StockManagerPro
 
   // ── Handlers ──────────────────────────────────────────────────────
   const handleBulkAdd = () => {
+    if (deliveryType === 'manual') {
+      if (!manualCount || typeof manualCount !== 'number' || manualCount <= 0) {
+        toast.error('Enter a valid amount to add')
+        return
+      }
+      // Generate dummy items for manual count
+      const items = Array.from({ length: manualCount }).map(() => `Manual-Stock-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`)
+      addMutation.mutate(items)
+      setManualCount('')
+      return
+    }
+
     const items = newStock
       .split('\n')
       .map((line) => line.trim())
@@ -162,34 +176,61 @@ export default function StockManager({ productId, productName }: StockManagerPro
       </div>
 
       {/* Add stock form */}
-      <div className="bg-surface border border-border/50 rounded-2xl p-4 sm:p-5 space-y-3">
-        <label
-          htmlFor="new-stock"
-          className="block text-sm font-medium text-foreground/70"
-        >
-          Add Stock (one item per line)
-        </label>
-        <textarea
-          id="new-stock"
-          value={newStock}
-          onChange={(e) => setNewStock(e.target.value)}
-          rows={5}
-          placeholder={"XXXX-XXXX-XXXX-XXXX\nYYYY-YYYY-YYYY-YYYY"}
-          className="w-full rounded-xl bg-background border border-border/50 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y font-mono"
-        />
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-foreground/40">
-            {newStock.split('\n').filter((l) => l.trim()).length} item(s) to add
-          </span>
-          <button
-            onClick={handleBulkAdd}
-            disabled={addMutation.isPending || !newStock.trim()}
-            className="flex items-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white px-4 py-2 rounded-xl transition-colors text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            {addMutation.isPending ? 'Adding...' : 'Add Stock'}
-          </button>
-        </div>
+      <div className="bg-surface border border-border/50 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+        {deliveryType === 'manual' ? (
+          <>
+            <label htmlFor="manual-stock" className="text-sm font-semibold text-foreground">
+              Add Stock Quantity
+            </label>
+            <input
+              id="manual-stock"
+              type="number"
+              min="1"
+              value={manualCount}
+              onChange={(e) => setManualCount(e.target.value === '' ? '' : parseInt(e.target.value))}
+              placeholder="e.g. 50"
+              className="w-full rounded-xl bg-background border border-border/50 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <div className="flex items-center justify-end gap-3 mt-2">
+              <button
+                onClick={handleBulkAdd}
+                disabled={addMutation.isPending || !manualCount || manualCount <= 0}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white px-5 py-2.5 rounded-xl transition-colors text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                {addMutation.isPending ? 'Adding...' : 'Add Stock Quantity'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <label htmlFor="new-stock" className="text-sm font-semibold text-foreground">
+              Add Stock (one digital key/item per line)
+            </label>
+            <textarea
+              id="new-stock"
+              value={newStock}
+              onChange={(e) => setNewStock(e.target.value)}
+              rows={5}
+              placeholder={"XXXX-XXXX-XXXX-XXXX\nYYYY-YYYY-YYYY-YYYY"}
+              className="w-full rounded-xl bg-background border border-border/50 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y font-mono"
+            />
+            <div className="flex items-center justify-between gap-3 mt-2">
+              <span className="text-xs text-foreground/40">
+                {newStock.split('\n').filter((l) => l.trim()).length} item(s) to add
+              </span>
+              <button
+                onClick={handleBulkAdd}
+                disabled={addMutation.isPending || !newStock.trim()}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white px-4 py-2 rounded-xl transition-colors text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                {addMutation.isPending ? 'Adding...' : 'Add Stock'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
       </div>
 
       {/* Stock list */}
