@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { X } from 'lucide-react'
+import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 
 interface Product {
   id?: number
@@ -52,19 +54,23 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             productId = res.data.id
         }
 
-        // Handle image upload if a file was selected
         if (imageFile && productId) {
             const uploadData = new FormData()
             uploadData.append('file', imageFile)
             await axios.post(`/api/v1/products/${productId}/image`, uploadData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
             })
         }
     },
     onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['admin-products'] })
         queryClient.invalidateQueries({ queryKey: ['products'] })
+        toast.success(product ? 'Product updated' : 'Product created')
         onClose()
+    },
+    onError: () => {
+        toast.error('Failed to save product')
     }
   })
 
@@ -73,37 +79,51 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     mutation.mutate(formData)
   }
 
+  const inputClass = "mt-1 block w-full rounded-xl border border-border/50 bg-background text-foreground p-2.5 text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-foreground/40"
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b dark:border-gray-700">
-          <h3 className="text-xl font-semibold dark:text-white">
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-50 bg-surface border border-border/50 rounded-2xl shadow-2xl w-full md:max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex justify-between items-center p-5 border-b border-border/50">
+          <h3 className="text-lg font-semibold text-foreground">
             {product ? 'Edit Product' : 'Add New Product'}
           </h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-            <X className="w-6 h-6" />
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-surface-hover text-foreground/70 transition-colors">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                <label className="block text-sm font-medium text-foreground/70">Name</label>
                 <input
                     type="text"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                    className={inputClass}
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
                 />
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Price</label>
+                <label className="block text-sm font-medium text-foreground/70">Price (EGP)</label>
                 <input
                     type="number"
                     step="0.01"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                    className={inputClass}
                     value={formData.price}
                     onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})}
                 />
@@ -111,20 +131,20 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+            <label className="block text-sm font-medium text-foreground/70">Category</label>
             <input
                 type="text"
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                className={inputClass}
                 value={formData.category}
                 onChange={e => setFormData({...formData, category: e.target.value})}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+            <label className="block text-sm font-medium text-foreground/70">Description</label>
             <textarea
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                className={`${inputClass} resize-none`}
                 rows={3}
                 value={formData.description}
                 onChange={e => setFormData({...formData, description: e.target.value})}
@@ -132,18 +152,18 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Product Image</label>
+            <label className="block text-sm font-medium text-foreground/70">Product Image</label>
             <div className="flex flex-col md:flex-row gap-4 items-center">
               <input
                   type="file"
                   accept="image/*"
-                  className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-300"
+                  className="mt-1 block w-full text-sm text-foreground/50 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"
                   onChange={e => setImageFile(e.target.files?.[0] || null)}
               />
-              <span className="font-medium text-gray-400 whitespace-nowrap">OR URL:</span>
+              <span className="font-medium text-foreground/40 whitespace-nowrap text-sm">OR URL:</span>
               <input
                   type="url"
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  className={inputClass}
                   value={formData.image_url || ''}
                   onChange={e => setFormData({...formData, image_url: e.target.value})}
                   placeholder="https://example.com/image.jpg"
@@ -151,18 +171,18 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
               />
             </div>
             {formData.image_url && !imageFile && (
-                <p className="text-xs text-green-500">Using existing image URL.</p>
+                <p className="text-xs text-success">Using existing image URL.</p>
             )}
             {imageFile && (
-                <p className="text-xs text-blue-500">Will upload file: {imageFile.name}</p>
+                <p className="text-xs text-primary">Will upload file: {imageFile.name}</p>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Delivery Type</label>
+                <label className="block text-sm font-medium text-foreground/70">Delivery Type</label>
                 <select
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                    className={inputClass}
                     value={formData.delivery_type}
                     onChange={e => setFormData({...formData, delivery_type: e.target.value as "manual" | "auto"})}
                 >
@@ -170,38 +190,38 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
                     <option value="auto">Automatic (Instant)</option>
                 </select>
             </div>
-            
+
             <div className="flex items-center mt-6">
                 <input
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                     checked={formData.is_active}
                     onChange={e => setFormData({...formData, is_active: e.target.checked})}
                 />
-                <label className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                <label className="ml-2 block text-sm text-foreground/70">
                     Active (Visible in Store)
                 </label>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 mt-6 pt-6 border-t dark:border-gray-700">
+          <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-border/50">
             <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-surface-hover rounded-xl transition-colors"
             >
                 Cancel
             </button>
             <button
                 type="submit"
                 disabled={mutation.isPending}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="px-5 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-xl transition-colors disabled:opacity-50"
             >
                 {mutation.isPending ? 'Saving...' : 'Save Product'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </>
   )
 }
