@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import { ShoppingBag, Package, MessageCircle, X, Check, Ban, MessageSquare, Tag, Star, Trash2, DollarSign, Users, TrendingUp, Menu, Search, ChevronLeft } from 'lucide-react'
+import { ShoppingBag, Package, MessageCircle, X, Check, Ban, MessageSquare, Tag, Star, Trash2, Users, Menu, Search, ChevronLeft, BarChart3, Boxes } from 'lucide-react'
 import ProductList from '../components/admin/ProductList'
 import AdminCoupons from '../components/AdminCoupons'
 import OrderChat from '../components/OrderChat'
-import RevenueChart from '../components/admin/RevenueChart'
 import UserList from '../components/admin/UserList'
+import AnalyticsTab from '../components/admin/AnalyticsTab'
+import StockManager from '../components/admin/StockManager'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 
@@ -72,40 +73,6 @@ interface AdminStats {
   total_reviews: number
 }
 
-// ---------- AnimatedCounter ----------
-function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number, prefix?: string, suffix?: string }) {
-  return (
-    <motion.span
-      key={value}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-    >
-      {prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}
-    </motion.span>
-  )
-}
-
-// ---------- KPI Card ----------
-function StatCard({ icon: Icon, label, value, prefix, suffix, accent }: {
-  icon: any, label: string, value: number, prefix?: string, suffix?: string,
-  accent: string
-}) {
-  return (
-    <div className="bg-surface border border-border/50 rounded-2xl p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className={`p-3 rounded-xl ${accent}`}>
-        <Icon className="w-6 h-6" />
-      </div>
-      <div>
-        <p className="text-sm text-gray-400 font-medium">{label}</p>
-        <p className="text-2xl font-bold text-foreground tracking-tight">
-          <AnimatedCounter value={value} prefix={prefix} suffix={suffix} />
-        </p>
-      </div>
-    </div>
-  )
-}
-
 // ---------- Priority Badge (dark-mode safe) ----------
 function PriorityBadge({ priority }: { priority: string }) {
   const styles: Record<string, string> = {
@@ -160,7 +127,7 @@ const fetchStats = async (): Promise<AdminStats> => {
 // ---------- Main Dashboard ----------
 export default function AdminDashboard() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'tickets' | 'coupons' | 'reviews' | 'users'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'tickets' | 'coupons' | 'reviews' | 'users' | 'analytics' | 'stock'>('orders')
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -169,6 +136,18 @@ export default function AdminDashboard() {
   const [deliveryKeyModalOpen, setDeliveryKeyModalOpen] = useState(false)
   const [currentApprovalOrderId, setCurrentApprovalOrderId] = useState<number | null>(null)
   const [deliveryKeyInput, setDeliveryKeyInput] = useState('')
+  const [selectedStockProductId, setSelectedStockProductId] = useState<number | null>(null)
+  const [selectedStockProductName, setSelectedStockProductName] = useState('')
+
+  // Product list for stock tab product selector
+  const { data: allProducts } = useQuery({
+    queryKey: ['admin-products-list'],
+    queryFn: async () => {
+      const res = await axios.get('/api/v1/products/')
+      return res.data as { id: number; name: string; delivery_type?: string }[]
+    },
+    enabled: activeTab === 'stock',
+  })
 
   // Queries
   const { data: stats } = useQuery({
@@ -312,9 +291,11 @@ export default function AdminDashboard() {
     { id: 'orders' as const, label: 'Orders', icon: ShoppingBag, badge: unreadOrdersCount },
     { id: 'tickets' as const, label: 'Support', icon: MessageCircle, badge: unreadTicketsCount },
     { id: 'products' as const, label: 'Products', icon: Package, badge: 0 },
+    { id: 'stock' as const, label: 'Stock', icon: Boxes, badge: 0 },
     { id: 'coupons' as const, label: 'Coupons', icon: Tag, badge: 0 },
     { id: 'reviews' as const, label: 'Reviews', icon: Star, badge: 0 },
     { id: 'users' as const, label: 'Users', icon: Users, badge: 0 },
+    { id: 'analytics' as const, label: 'Analytics', icon: BarChart3, badge: 0 },
   ]
 
   const ORDER_FILTERS = [
@@ -396,19 +377,6 @@ export default function AdminDashboard() {
           </header>
 
           <div className="flex-1 p-4 md:p-8 pt-4 overflow-y-auto space-y-6">
-              {/* KPI Stats Cards — show on orders tab */}
-              {activeTab === 'orders' && stats && (
-                <div className="flex flex-col gap-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard icon={DollarSign} label="Total Revenue" value={stats.total_revenue} suffix=" EGP" accent="bg-emerald-500/15 text-emerald-400" />
-                    <StatCard icon={ShoppingBag} label="Pending Orders" value={stats.pending_orders} accent="bg-amber-500/15 text-amber-400" />
-                    <StatCard icon={Users} label="Total Users" value={stats.total_users} accent="bg-blue-500/15 text-blue-400" />
-                    <StatCard icon={TrendingUp} label="Completed" value={stats.completed_orders} accent="bg-primary/15 text-primary" />
-                  </div>
-                  <RevenueChart />
-                </div>
-              )}
-
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -493,6 +461,39 @@ export default function AdminDashboard() {
                                   </table>
                               </div>
                           )}
+                      </div>
+                   ) : activeTab === 'analytics' ? (
+                      <AnalyticsTab />
+                   ) : activeTab === 'stock' ? (
+                      /* --- STOCK TAB --- */
+                      <div className="space-y-6">
+                        <div className="bg-surface border border-border/50 rounded-2xl p-6 shadow-sm">
+                          <h3 className="text-lg font-bold text-foreground mb-4">Select a Product</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {allProducts?.map(p => (
+                              <button
+                                key={p.id}
+                                onClick={() => { setSelectedStockProductId(p.id); setSelectedStockProductName(p.name) }}
+                                className={`text-left p-4 rounded-xl border transition-all ${
+                                  selectedStockProductId === p.id
+                                    ? 'border-primary bg-primary/10 shadow-sm'
+                                    : 'border-border/50 hover:border-primary/30 hover:bg-surface-hover'
+                                }`}
+                              >
+                                <span className="font-medium text-foreground text-sm block truncate">{p.name}</span>
+                                <span className="text-xs text-gray-400 mt-1 block">
+                                  {p.delivery_type === 'auto' ? 'Auto Delivery' : 'Manual Delivery'} &middot; ID #{p.id}
+                                </span>
+                              </button>
+                            ))}
+                            {!allProducts?.length && (
+                              <p className="text-gray-500 col-span-full text-center py-8">No products found</p>
+                            )}
+                          </div>
+                        </div>
+                        {selectedStockProductId && (
+                          <StockManager productId={selectedStockProductId} productName={selectedStockProductName} />
+                        )}
                       </div>
                    ) : activeTab === 'tickets' ? (
                       /* --- TICKETS TAB --- */
