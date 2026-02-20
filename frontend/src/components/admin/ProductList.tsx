@@ -12,6 +12,9 @@ interface Product {
   stock_count: number
   is_active: boolean
   image_url?: string
+  delivery_type?: 'manual' | 'auto'
+  description?: string
+  features?: string[]
 }
 
 export default function ProductList() {

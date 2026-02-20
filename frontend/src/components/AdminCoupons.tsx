@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import { Plus, Trash, Check, X, Tag } from 'lucide-react'
+import { Plus, Trash, Check, Tag } from 'lucide-react'
 
 interface Coupon {
   id: number
@@ -81,7 +81,7 @@ export default function AdminCoupons() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{coupon.code}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {coupon.discount_percent}% 
-                    {coupon.max_discount_amount && <span className="text-xs text-gray-400 block">(Max: EGP {coupon.max_discount_amount})</span>}
+                    {coupon.max_discount_amount && <span className="text-xs text-gray-400 block">(Max: {coupon.max_discount_amount} EGP)</span>}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {coupon.used_count} / {coupon.max_uses ?? '∞'}

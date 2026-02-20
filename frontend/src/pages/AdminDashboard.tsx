@@ -5,7 +5,7 @@ import { ShoppingBag, Package, MessageSquare, X, Check, Ban, MessageCircle, Tag,
 import ProductList from '../components/admin/ProductList'
 import AdminCoupons from '../components/AdminCoupons'
 import OrderChat from '../components/OrderChat'
-import { useAuth } from '../context/AuthContext'
+
 
 // ... Order Interface ...
 interface Order {
@@ -143,110 +143,124 @@ export default function AdminDashboard() {
   const unreadTicketsCount = tickets?.filter(t => t.has_unread_messages).length || 0
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 dark:text-white">Admin Dashboard</h1>
-      
-      {/* Tabs */}
-      <div className="flex space-x-4 mb-8 border-b dark:border-gray-700 overflow-x-auto">
-        <button 
-            onClick={() => setActiveTab('orders')}
-            className={`flex items-center pb-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === 'orders' 
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-        >
-            <div className="relative">
-                <ShoppingBag className="w-5 h-5 mr-2" />
-                {unreadOrdersCount > 0 && <span className="absolute -top-1 -right-0 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />}
-            </div>
-            <span className="font-medium">Orders</span>
-        </button>
-        <button 
-            onClick={() => setActiveTab('tickets')}
-            className={`flex items-center pb-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === 'tickets' 
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-        >
-            <div className="relative">
-                <MessageCircle className="w-5 h-5 mr-2" />
-                {unreadTicketsCount > 0 && <span className="absolute -top-1 -right-0 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />}
-            </div>
-            <span className="font-medium">Support Tickets</span>
-        </button>
-        <button 
-            onClick={() => setActiveTab('products')}
-            className={`flex items-center pb-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === 'products' 
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-        >
-            <Package className="w-5 h-5 mr-2" />
-            <span className="font-medium">Products</span>
-        </button>
-        <button 
-            onClick={() => setActiveTab('coupons')}
-            className={`flex items-center pb-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === 'coupons' 
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-        >
-            <Tag className="w-5 h-5 mr-2" />
-            <span className="font-medium">Coupons</span>
-        </button>
-        <button 
-            onClick={() => setActiveTab('reviews')}
-            className={`flex items-center pb-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === 'reviews' 
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-        >
-            <Star className="w-5 h-5 mr-2" />
-            <span className="font-medium">Reviews</span>
-        </button>
-      </div>
+    <div className="flex flex-1 min-h-[calc(100vh-4rem)] bg-background pt-24">
+      {/* Sidebar Navigation */}
+      <aside className="w-64 border-r border-border/50 bg-surface flex flex-col shrink-0">
+         <div className="p-6 border-b border-border/50">
+             <h2 className="text-xl font-bold text-foreground">Admin Portal</h2>
+         </div>
+         <nav className="flex-1 p-4 space-y-1">
+             <button 
+                 onClick={() => setActiveTab('orders')}
+                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-medium ${
+                     activeTab === 'orders' 
+                     ? 'bg-primary/10 text-primary' 
+                     : 'text-gray-400 hover:bg-surface-hover hover:text-foreground'
+                 }`}
+             >
+                 <div className="flex items-center gap-3">
+                     <ShoppingBag className="w-5 h-5" />
+                     Orders
+                 </div>
+                 {unreadOrdersCount > 0 && <span className="bg-danger text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{unreadOrdersCount}</span>}
+             </button>
 
-      {/* Content */}
-      {activeTab === 'products' ? (
-        <ProductList />
-      ) : activeTab === 'coupons' ? (
-        <AdminCoupons />
-      ) : activeTab === 'reviews' ? (
+             <button 
+                 onClick={() => setActiveTab('tickets')}
+                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-medium ${
+                     activeTab === 'tickets' 
+                     ? 'bg-primary/10 text-primary' 
+                     : 'text-gray-400 hover:bg-surface-hover hover:text-foreground'
+                 }`}
+             >
+                 <div className="flex items-center gap-3">
+                     <MessageCircle className="w-5 h-5" />
+                     Support
+                 </div>
+                 {unreadTicketsCount > 0 && <span className="bg-danger text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{unreadTicketsCount}</span>}
+             </button>
+
+             <button 
+                 onClick={() => setActiveTab('products')}
+                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                     activeTab === 'products' 
+                     ? 'bg-primary/10 text-primary' 
+                     : 'text-gray-400 hover:bg-surface-hover hover:text-foreground'
+                 }`}
+             >
+                 <Package className="w-5 h-5" />
+                 Products
+             </button>
+
+             <button 
+                 onClick={() => setActiveTab('coupons')}
+                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                     activeTab === 'coupons' 
+                     ? 'bg-primary/10 text-primary' 
+                     : 'text-gray-400 hover:bg-surface-hover hover:text-foreground'
+                 }`}
+             >
+                 <Tag className="w-5 h-5" />
+                 Coupons
+             </button>
+
+             <button 
+                 onClick={() => setActiveTab('reviews')}
+                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                     activeTab === 'reviews' 
+                     ? 'bg-primary/10 text-primary' 
+                     : 'text-gray-400 hover:bg-surface-hover hover:text-foreground'
+                 }`}
+             >
+                 <Star className="w-5 h-5" />
+                 Reviews
+             </button>
+         </nav>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0">
+          <header className="h-20 flex items-center px-8 shrink-0 relative z-10">
+              <h1 className="text-3xl font-bold text-foreground capitalize tracking-tight">{activeTab}</h1>
+          </header>
+          
+          <div className="flex-1 p-8 pt-0 overflow-y-auto">
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {activeTab === 'products' ? (
+                     <ProductList />
+                  ) : activeTab === 'coupons' ? (
+                     <AdminCoupons />
+                  ) : activeTab === 'reviews' ? (
         // --- REVIEWS TAB ---
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="bg-surface border border-border/50 rounded-2xl shadow-sm overflow-hidden">
             {isLoadingReviews ? (
-                <div className="p-8 text-center dark:text-gray-300">Loading Reviews...</div>
+                <div className="p-8 text-center text-foreground">Loading Reviews...</div>
             ) : isErrorReviews ? (
-                <div className="p-8 text-center text-red-500">Error loading reviews</div>
+                <div className="p-8 text-center text-danger">Error loading reviews</div>
             ) : (
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-50 dark:bg-gray-700">
+                    <table className="min-w-full divide-y divide-border/50">
+                        <thead className="bg-surface-hover">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Product ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">User</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Comment</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Product ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">User</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Rating</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Comment</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="bg-surface divide-y divide-border/50">
                             {reviews?.map((review) => (
                                 <tr key={review.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">#{review.id}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{review.product_id}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">#{review.id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{review.product_id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                         <div className="flex flex-col">
                                             <span>{review.user?.email || `User #${review.user_id}`}</span>
                                             {review.is_verified_purchase && (
-                                                <span className="text-xs text-green-600 dark:text-green-400 flex items-center">
+                                                <span className="text-xs text-success flex items-center">
                                                     <Check className="w-3 h-3 mr-1" /> Verified
                                                 </span>
                                             )}
@@ -262,16 +276,16 @@ export default function AdminDashboard() {
                                             ))}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" title={review.comment}>
+                                    <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate" title={review.comment}>
                                         {review.comment || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                         {new Date(review.created_at).toLocaleDateString()}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                         <button 
                                             onClick={() => handleDeleteReview(review.id)}
-                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                            className="text-danger hover:text-danger-hover"
                                             title="Delete Review"
                                         >
                                             <Trash2 className="w-5 h-5" />
@@ -286,29 +300,29 @@ export default function AdminDashboard() {
         </div>
       ) : activeTab === 'tickets' ? (
         // --- TICKETS TAB ---
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="bg-surface border border-border/50 rounded-2xl shadow-sm overflow-hidden">
             {isLoadingTickets ? (
-                <div className="p-8 text-center dark:text-gray-300">Loading Tickets...</div>
+                <div className="p-8 text-center text-foreground">Loading Tickets...</div>
             ) : isErrorTickets ? (
-                <div className="p-8 text-center text-red-500">Error loading tickets</div>
+                <div className="p-8 text-center text-danger">Error loading tickets</div>
             ) : (
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-50 dark:bg-gray-700">
+                    <table className="min-w-full divide-y divide-border/50">
+                        <thead className="bg-surface-hover">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Subject</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Priority</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Update</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Subject</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Priority</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Last Update</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="bg-surface divide-y divide-border/50">
                             {tickets?.map((ticket) => (
-                                <tr key={ticket.id} className={ticket.has_unread_messages ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">#{ticket.id}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white flex items-center">
+                                <tr key={ticket.id} className={ticket.has_unread_messages ? 'bg-primary/5' : ''}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">#{ticket.id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground flex items-center">
                                         {ticket.subject}
                                         {ticket.has_unread_messages && (
                                             <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full" title="Unread messages"></span>
@@ -378,7 +392,7 @@ export default function AdminDashboard() {
                 <tr key={order.id} className={order.has_unread_messages ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">#{order.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{order.product_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-bold">EGP {order.amount}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-bold">{order.amount} EGP</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       order.status === 'completed' ? 'bg-green-100 text-green-800' : 
@@ -439,6 +453,9 @@ export default function AdminDashboard() {
         )}
         </div>
       )}
+              </div>
+          </div>
+      </main>
 
       {/* Order Chat Modal */}
       {selectedOrderId && (
@@ -502,7 +519,7 @@ function AdminTicketChat({ ticketId }: { ticketId: number }) {
     
     const [newMessage, setNewMessage] = useState('')
     const queryClient = useQueryClient()
-    const messagesEndRef = useState<HTMLDivElement | null>(null)[1] // Placeholder ref
+
     
     const { data: messages, isLoading } = useQuery({
         queryKey: ['ticket-messages', ticketId],

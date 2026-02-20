@@ -46,9 +46,9 @@ export default function Checkout() {
 
   if (cart.length === 0) {
      return (
-        <div className="container mx-auto px-4 py-8 text-center">
-            <h1 className="text-2xl font-bold mb-4 dark:text-white">Your cart is empty</h1>
-            <button onClick={() => navigate('/')} className="text-blue-600 hover:underline dark:text-blue-400">Go Shopping</button>
+        <div className="container mx-auto px-4 py-8 pt-32 text-center">
+            <h1 className="text-3xl font-bold mb-4 text-foreground">Your cart is empty</h1>
+            <button onClick={() => navigate('/')} className="text-primary hover:text-primary-hover font-medium">Go Shopping</button>
         </div>
      )
   }
@@ -98,80 +98,88 @@ export default function Checkout() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 dark:text-white">Checkout</h1>
+    <div className="container mx-auto px-4 py-8 pt-28 max-w-2xl bg-background min-h-screen">
+      <h1 className="text-3xl font-bold mb-8 text-foreground font-display uppercase tracking-tight">Checkout</h1>
       
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4 dark:text-white">Order Summary</h2>
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-            <p className="flex justify-between font-medium dark:text-gray-300">
-                <span>Total Items:</span>
-                <span>{cart.reduce((sum, item) => sum + item.quantity, 0)}</span>
+      <div className="bg-surface border border-border/50 rounded-3xl shadow-xl p-8">
+        <h2 className="text-xl font-black mb-6 text-foreground tracking-tight uppercase">Order Summary</h2>
+        <div className="border-b border-border/50 pb-6 mb-8">
+            <p className="flex justify-between font-bold text-gray-400 mb-2">
+                <span>Total Items</span>
+                <span className="text-foreground">{cart.reduce((sum, item) => sum + item.quantity, 0)} Units</span>
             </p>
-            <p className="flex justify-between text-gray-600 dark:text-gray-400 mt-2">
-                <span>Subtotal:</span>
-                <span>EGP {total.toFixed(2)}</span>
+            <p className="flex justify-between text-gray-400 font-bold mb-2">
+                <span>Subtotal</span>
+                <span className="text-foreground">{total.toFixed(2)} EGP</span>
             </p>
             {coupon && (
-                <p className="flex justify-between text-green-600 dark:text-green-400 mt-1">
-                    <span>Discount ({coupon.code}):</span>
-                    <span>-EGP {discountAmount.toFixed(2)}</span>
+                <p className="flex justify-between text-success font-bold mb-2">
+                    <span>Discount ({coupon.code})</span>
+                    <span>-{discountAmount.toFixed(2)} EGP</span>
                 </p>
             )}
-            <p className="flex justify-between font-bold text-lg mt-2 dark:text-white">
-                <span>Total Cost:</span>
-                <span>EGP {finalTotal.toFixed(2)}</span>
+            <p className="flex justify-between font-black text-2xl mt-4 text-primary">
+                <span>Total Cost</span>
+                <span>{finalTotal.toFixed(2)} EGP</span>
             </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-                <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                <label htmlFor="full-name" className="block text-sm font-semibold text-gray-400 mb-2">Full Name</label>
                 <input 
                     id="full-name"
                     type="text" 
                     required
-                    placeholder="Full Name"
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Enter your full name"
+                    className="w-full bg-surface-hover border border-border/50 rounded-xl px-4 py-3 text-foreground focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-500"
                     value={formData.fullName}
                     onChange={e => setFormData({...formData, fullName: e.target.value})}
                 />
             </div>
             
             <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-400 mb-2">Email Address</label>
                 <input 
                     id="email"
                     type="email" 
                     required
-                    placeholder="Email Address"
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Enter your email"
+                    className="w-full bg-surface-hover border border-border/50 rounded-xl px-4 py-3 text-foreground focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-500"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                 />
             </div>
 
             <div>
-                <label htmlFor="payment-method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
+                <label htmlFor="payment-method" className="block text-sm font-semibold text-gray-400 mb-2">Payment Method</label>
                 <select 
                     id="payment-method"
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full bg-surface-hover border border-border/50 rounded-xl px-4 py-3 text-foreground focus:ring-1 focus:ring-primary outline-none transition-all"
                     value={formData.paymentMethod}
                     onChange={e => setFormData({...formData, paymentMethod: e.target.value})}
                 >
                     <option value="mock_card">Bank Transfer / Manual Payment</option>
-                    <option value="crypto">Cryptocurrency (Coming Soon)</option>
+                    <option value="crypto" disabled>Cryptocurrency (Coming Soon)</option>
                 </select>
             </div>
 
-            <div>
-                <label htmlFor="payment-proof" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Proof (Screenshot)</label>
+            <div className="bg-background/50 border border-border/30 rounded-2xl p-6">
+                <label htmlFor="payment-proof" className="block text-sm font-semibold text-foreground mb-2">Payment Proof</label>
+                <p className="text-xs text-gray-400 mb-4 tracking-wide leading-relaxed">
+                   Upload a clear screenshot of your bank transfer receipt or payment confirmation.
+                </p>
                 <input 
                     id="payment-proof"
                     type="file" 
                     accept="image/*"
                     required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full text-sm text-gray-400
+                       file:mr-4 file:py-2.5 file:px-6
+                       file:rounded-full file:border-0
+                       file:text-sm file:font-semibold file:tracking-wide
+                       file:bg-primary/20 file:text-primary
+                       hover:file:bg-primary/30 cursor-pointer file:cursor-pointer file:transition-colors transition-colors"
                     onChange={e => {
                         const file = e.target.files?.[0]
                         if (file) {
@@ -179,15 +187,14 @@ export default function Checkout() {
                         }
                     }}
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Please upload a screenshot of your payment receipt.</p>
             </div>
 
             <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-green-600 text-white font-bold py-3 px-4 rounded hover:bg-green-700 transition-colors mt-6 cursor-pointer disabled:opacity-50"
+                className="w-full bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-black py-4 px-4 rounded-xl shadow-[0_0_15px_-3px_var(--color-primary)] transition-all uppercase tracking-widest text-sm active:scale-[0.98] mt-8 disabled:opacity-50"
             >
-                {isSubmitting ? 'Placing Order...' : 'Place Order'}
+                {isSubmitting ? 'Transmitting...' : 'Confirm Order & Pay'}
             </button>
         </form>
       </div>

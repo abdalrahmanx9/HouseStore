@@ -44,32 +44,32 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg mb-8">
-            <h3 className="text-lg font-semibold mb-4 dark:text-white">Write a Review</h3>
+        <form onSubmit={handleSubmit} className="flex flex-col">
+            <h3 className="text-xl font-bold mb-6 text-foreground">Submit Intelligence</h3>
             
             {error && (
-                <div className="mb-4 bg-red-100 text-red-700 p-3 rounded text-sm">
+                <div className="mb-4 bg-danger/10 text-danger p-3 rounded-lg text-sm font-semibold border border-danger/20">
                     {error}
                 </div>
             )}
 
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rating</label>
-                <div className="flex space-x-1">
+            <div className="mb-6">
+                <label className="block text-xs uppercase tracking-widest font-bold text-gray-500 mb-3">Rating</label>
+                <div className="flex space-x-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <button
                             key={star}
                             type="button"
-                            className="focus:outline-none transition-transform hover:scale-110"
+                            className="focus:outline-none transition-transform hover:scale-125 focus-visible:scale-125"
                             onClick={() => setRating(star)}
                             onMouseEnter={() => setHoverRating(star)}
                             onMouseLeave={() => setHoverRating(0)}
                         >
                             <Star 
-                                className={`w-6 h-6 ${
+                                className={`w-8 h-8 transition-colors duration-200 ${
                                     star <= (hoverRating || rating) 
-                                        ? 'text-yellow-400 fill-current' 
-                                        : 'text-gray-300 dark:text-gray-600'
+                                        ? 'text-yellow-400 fill-current drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' 
+                                        : 'text-gray-600 hover:text-gray-400'
                                 }`} 
                             />
                         </button>
@@ -77,23 +77,23 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
                 </div>
             </div>
 
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comment (Optional)</label>
+            <div className="mb-6">
+                <label className="block text-xs uppercase tracking-widest font-bold text-gray-500 mb-3">Signal Transmission (Optional)</label>
                 <textarea
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="w-full px-4 py-3 bg-surface/50 border border-border/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-foreground placeholder:text-gray-600 transition-all resize-none font-medium"
                     rows={4}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Share your thoughts..."
+                    placeholder="Provide detailed logs of your experience..."
                 />
             </div>
 
             <button
                 type="submit"
                 disabled={submitMutation.isPending}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="w-full bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-bold px-4 py-3.5 rounded-xl disabled:opacity-50 transition-all uppercase tracking-widest text-sm shadow-[0_0_15px_-3px_var(--color-primary)] active:scale-95"
             >
-                {submitMutation.isPending ? 'Submitting...' : 'Submit Review'}
+                {submitMutation.isPending ? 'Transmitting...' : 'Upload Review'}
             </button>
         </form>
     )

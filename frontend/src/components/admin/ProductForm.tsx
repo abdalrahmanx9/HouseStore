@@ -10,7 +10,7 @@ interface Product {
   price: number
   category: string
   image_url?: string
-  delivery_type: "manual" | "auto"
+  delivery_type?: "manual" | "auto"
   is_active: boolean
 }
 
@@ -21,6 +21,7 @@ interface ProductFormProps {
 
 export default function ProductForm({ product, onClose }: ProductFormProps) {
   const queryClient = useQueryClient()
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [formData, setFormData] = useState<Product>({
     name: '',
     description: '',
@@ -43,10 +44,21 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: Product) => {
-        if (product?.id) {
-            await axios.put(`/api/v1/products/${product.id}`, data)
+        let productId = product?.id
+        if (productId) {
+            await axios.put(`/api/v1/products/${productId}`, data)
         } else {
-            await axios.post('/api/v1/products/', data)
+            const res = await axios.post('/api/v1/products/', data)
+            productId = res.data.id
+        }
+
+        // Handle image upload if a file was selected
+        if (imageFile && productId) {
+            const uploadData = new FormData()
+            uploadData.append('file', imageFile)
+            await axios.post(`/api/v1/products/${productId}/image`, uploadData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            })
         }
     },
     onSuccess: () => {
@@ -119,15 +131,31 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Image URL</label>
-            <input
-                type="url"
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                value={formData.image_url}
-                onChange={e => setFormData({...formData, image_url: e.target.value})}
-                placeholder="https://example.com/image.jpg"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Product Image</label>
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <input
+                  type="file"
+                  accept="image/*"
+                  className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-300"
+                  onChange={e => setImageFile(e.target.files?.[0] || null)}
+              />
+              <span className="font-medium text-gray-400 whitespace-nowrap">OR URL:</span>
+              <input
+                  type="url"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  value={formData.image_url || ''}
+                  onChange={e => setFormData({...formData, image_url: e.target.value})}
+                  placeholder="https://example.com/image.jpg"
+                  disabled={!!imageFile}
+              />
+            </div>
+            {formData.image_url && !imageFile && (
+                <p className="text-xs text-green-500">Using existing image URL.</p>
+            )}
+            {imageFile && (
+                <p className="text-xs text-blue-500">Will upload file: {imageFile.name}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -3,6 +3,8 @@ import { MessageCircle, X, Send, Plus, ChevronLeft } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 
 // Types
 interface Ticket {
@@ -24,10 +26,10 @@ interface TicketMessage {
 
 export default function SupportWidget() {
     const { user } = useAuth()
+    const { pathname } = useLocation()
     const [isOpen, setIsOpen] = useState(false)
     const [view, setView] = useState<'list' | 'create' | 'chat'>('list')
     const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
-    const queryClient = useQueryClient()
 
     // Fetch Tickets
     const { data: tickets, isLoading } = useQuery({
@@ -43,13 +45,20 @@ export default function SupportWidget() {
 
     const unreadCount = tickets?.filter(t => t.has_unread_messages).length || 0
 
-    if (!user) return null
+    if (!user || pathname.startsWith('/admin')) return null
 
     return (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-            {/* Widget Window */}
-            {isOpen && (
-                <div className="mb-4 w-[350px] h-[500px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border dark:border-gray-700 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-200">
+            <AnimatePresence>
+                {/* Widget Window */}
+                {isOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4 }}
+                        className="mb-4 w-[350px] h-[500px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border dark:border-gray-700 overflow-hidden flex flex-col will-change-transform transform-origin-bottom-right"
+                    >
                     {/* Header */}
                     <div className="bg-blue-600 p-4 text-white flex justify-between items-center">
                         <div className="flex items-center space-x-2">
@@ -94,8 +103,9 @@ export default function SupportWidget() {
                             </>
                         )}
                     </div>
-                </div>
+                </motion.div>
             )}
+            </AnimatePresence>
 
             {/* FAB */}
             <button 

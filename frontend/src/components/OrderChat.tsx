@@ -89,7 +89,7 @@ export default function OrderChat({ orderId }: OrderChatProps) {
         )}
         
         {messages?.map((msg) => {
-            const isMe = user?.id === msg.user_id
+            const isMe = (user as any)?.id === msg.user_id
             return (
                 <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2 shadow-sm ${
