@@ -121,7 +121,10 @@ export default function AnalyticsTab() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    : [];
+    } catch (error) {
+      console.error(`Failed to export ${type}`, error);
+    }
+  };
 
   const kpis: {
     label: string;

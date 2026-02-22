@@ -4,6 +4,7 @@ import { User, Mail, Shield, Save, Key, Camera, Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { motion } from 'framer-motion'
+import { useQuery } from '@tanstack/react-query'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -12,6 +13,14 @@ import { toast } from 'sonner'
 
 export default function ProfilePage() {
     const { user } = useAuth()
+    const { data: wishlist, isLoading: isLoadingWishlist } = useQuery({
+        queryKey: ['wishlist'],
+        queryFn: async () => {
+            const { data } = await axios.get('/api/v1/wishlist/')
+            return data
+        },
+        enabled: !!user
+    })
     const [isEditing, setIsEditing] = useState(false)
     const [formData, setFormData] = useState({
         full_name: '',
@@ -40,7 +49,6 @@ export default function ProfilePage() {
 
         try {
             await axios.post('/api/v1/users/me/avatar', uploadData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
             })
             // Quick reload to show new picture (a proper impl would refresh AuthContext)
@@ -198,25 +206,24 @@ export default function ProfilePage() {
                             </div>
                             
                             {(() => {
-                                const stored = localStorage.getItem('favorites')
-                                const favorites = stored ? JSON.parse(stored) : []
+                                if (isLoadingWishlist) return <p className="text-sm text-gray-400">Loading favorites...</p>
                                 
-                                if (favorites.length === 0) {
+                                if (!wishlist || wishlist.length === 0) {
                                     return <p className="text-sm text-gray-400">You haven't added any products to your favorites yet.</p>
                                 }
 
                                 return (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {favorites.map((product: any) => (
-                                            <Link key={product.id} to={`/products/${product.id}`} className="group relative rounded-xl border border-border/50 bg-background/50 overflow-hidden flex items-center hover:border-primary/50 transition-colors">
-                                                {product.image_url && (
+                                        {wishlist.map((item: any) => (
+                                            <Link key={item.id} to={`/products/${item.product.id}`} className="group relative rounded-xl border border-border/50 bg-background/50 overflow-hidden flex items-center hover:border-primary/50 transition-colors">
+                                                {item.product.image_url && (
                                                     <div className="w-20 h-20 shrink-0 bg-surface-hover">
-                                                        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                        <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                                                     </div>
                                                 )}
                                                 <div className="p-3">
-                                                    <p className="font-bold text-foreground text-sm line-clamp-1">{product.name}</p>
-                                                    <p className="text-xs text-primary font-medium">{product.price} EGP</p>
+                                                    <p className="font-bold text-foreground text-sm line-clamp-1">{item.product.name}</p>
+                                                    <p className="text-xs text-primary font-medium">{item.product.price} EGP</p>
                                                 </div>
                                             </Link>
                                         ))}

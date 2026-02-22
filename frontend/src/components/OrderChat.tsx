@@ -44,11 +44,7 @@ export default function OrderChat({ orderId }: OrderChatProps) {
 
   const mutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      await axios.post(`/api/v1/orders/${orderId}/messages`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-      })
+      await axios.post(`/api/v1/orders/${orderId}/messages`, formData)
     },
     onSuccess: () => {
       setNewMessage('')

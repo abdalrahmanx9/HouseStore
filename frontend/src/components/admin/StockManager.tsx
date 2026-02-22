@@ -231,7 +231,6 @@ export default function StockManager({ productId, productName, deliveryType = 'm
           </>
         )}
       </div>
-      </div>
 
       {/* Stock list */}
       <div className="bg-surface border border-border/50 rounded-2xl shadow-sm overflow-hidden">

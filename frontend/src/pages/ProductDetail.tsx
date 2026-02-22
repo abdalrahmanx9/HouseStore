@@ -1,8 +1,9 @@
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { ArrowLeft, Check, X, ShieldCheck, Zap, Share2, Heart, Gamepad2, Laptop, MessageCircle, Cpu, GraduationCap, Package, Star, AlertTriangle } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import type { Review, Product } from '../types'
 import ReviewList from '../components/ReviewList'
 import ProductCard from '../components/ProductCard'
@@ -90,23 +91,50 @@ export default function ProductDetail() {
   // Immersive Portrait Media Modal
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
 
-  // Persist Favorites locally
-  const [favorites, setFavorites] = useState<Product[]>(() => {
-     const stored = localStorage.getItem('favorites')
-     return stored ? JSON.parse(stored) : []
+  // Wishlist Logic
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+  
+  const { data: isInWishlist } = useQuery({
+    queryKey: ['wishlist-check', product?.id],
+    queryFn: async () => {
+      const { data } = await axios.get(`/api/v1/wishlist/check/${product?.id}`)
+      return data.in_wishlist
+    },
+    enabled: !!product?.id && !!user,
   })
-  const isFavorite = product ? favorites.some(fav => fav.id === product.id) : false
 
+  const toggleWishlist = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not logged in')
+      if (isInWishlist) {
+        return axios.delete(`/api/v1/wishlist/${product?.id}`)
+      } else {
+        return axios.post(`/api/v1/wishlist/?product_id=${product?.id}`)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist-check', product?.id] })
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] })
+      if (isInWishlist) {
+         toast.success('Removed from wishlist')
+      } else {
+         toast.success('Added to wishlist')
+      }
+    },
+    onError: (error) => {
+      if (error.message === 'Not logged in') {
+        toast.error('Please log in to manage your wishlist')
+      } else {
+        toast.error('Failed to update wishlist. Please try again.')
+      }
+    }
+  })
+
+  const isFavorite = !!isInWishlist
   const toggleFavorite = () => {
       if (!product) return
-      let newFavs = []
-      if (isFavorite) {
-         newFavs = favorites.filter(fav => fav.id !== product.id)
-      } else {
-         newFavs = [...favorites, product]
-      }
-      setFavorites(newFavs)
-      localStorage.setItem('favorites', JSON.stringify(newFavs))
+      toggleWishlist.mutate()
   }
 
   const handleShare = async () => {

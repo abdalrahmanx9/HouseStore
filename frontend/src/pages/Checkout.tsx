@@ -47,7 +47,8 @@ export default function Checkout() {
     if (user) {
         setFormData(prev => ({
             ...prev,
-            email: user.email,
+            fullName: user.full_name || user.name || 'Customer',
+            email: user.email || '',
         }))
     }
   }, [user])
@@ -90,9 +91,7 @@ export default function Checkout() {
         }
 
         const response = await axios.post('/api/v1/orders/', data, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+            withCredentials: true
         })
         
         console.log('Order created:', response.data)
@@ -102,9 +101,9 @@ export default function Checkout() {
          queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
          toast.success('Order placed successfully! 🎉')
          navigate('/order-success')
-    } catch (error) {
-        console.error("Order failed", error)
-         toast.error('Failed to place order. Please try again.')
+    } catch (error: any) {
+        console.error("Order failed", error.response?.data || error)
+         toast.error(error.response?.data?.detail || 'Failed to place order. Please try again.')
     } finally {
         setIsSubmitting(false)
     }

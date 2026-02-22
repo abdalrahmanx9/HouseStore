@@ -58,7 +58,6 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             const uploadData = new FormData()
             uploadData.append('file', imageFile)
             await axios.post(`/api/v1/products/${productId}/image`, uploadData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
             })
         }

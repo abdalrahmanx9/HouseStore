@@ -70,7 +70,7 @@ export function Navbar() {
         <header 
           className={`pointer-events-auto transition-all duration-500 ease-out border ${
             isScrolled 
-              ? 'w-full max-w-4xl h-16 rounded-full backdrop-blur-xl bg-surface/80 border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
+              ? 'w-full max-w-6xl h-16 rounded-full backdrop-blur-xl bg-surface/80 border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
               : 'w-full max-w-7xl h-20 rounded-3xl bg-surface/30 backdrop-blur-sm border-border/30 shadow-sm'
           }`}
         >
