@@ -30,7 +30,7 @@ class TicketMessage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     ticket_id = Column(Integer, ForeignKey("store_tickets.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     content = Column(String, nullable=False)
     attachment_url = Column(String(255), nullable=True)

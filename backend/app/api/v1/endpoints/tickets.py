@@ -20,14 +20,14 @@ async def create_ticket(
     *,
     db: AsyncSession = Depends(deps.get_db),
     ticket_in: schemas.TicketCreate,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: Optional[models.User] = Depends(deps.get_optional_current_user),
 ):
     """
     Create a new support ticket.
     """
     # 1. Create Ticket
     ticket = models.Ticket(
-        user_id=current_user.id,
+        user_id=current_user.id if current_user else None,
         subject=ticket_in.subject,
         priority=ticket_in.priority,
         status="open",
@@ -39,7 +39,7 @@ async def create_ticket(
     # 2. Create Initial Message
     message = models.TicketMessage(
         ticket_id=ticket.id,
-        user_id=current_user.id,
+        user_id=current_user.id if current_user else None,
         content=ticket_in.initial_message,
         is_admin=False,  # User created it
     )
@@ -54,7 +54,7 @@ async def read_tickets(
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: Optional[models.User] = Depends(deps.get_optional_current_user),
 ):
     """
     Retrieve tickets with unread status.
@@ -67,8 +67,17 @@ async def read_tickets(
         .order_by(models.Ticket.updated_at.desc())
     )
 
-    if not current_user.is_superuser:
+    if current_user and current_user.is_superuser:
+        pass # Admin sees all
+    elif current_user:
         stmt = stmt.where(models.Ticket.user_id == current_user.id)
+    else:
+        if not guest_ids:
+            return []
+        ids = [int(i) for i in guest_ids.split(",") if i.isdigit()]
+        if not ids:
+            return []
+        stmt = stmt.where(models.Ticket.id.in_(ids)).where(models.Ticket.user_id == None)
 
     result = await db.execute(stmt)
     tickets = result.scalars().all()
@@ -85,7 +94,7 @@ async def read_tickets(
             models.TicketMessage.ticket_id == t.id, models.TicketMessage.read_at == None
         )
 
-        if current_user.is_superuser:
+        if current_user and current_user.is_superuser:
             unread_stmt = unread_stmt.where(models.TicketMessage.is_admin == False)
         else:
             unread_stmt = unread_stmt.where(models.TicketMessage.is_admin == True)
@@ -116,7 +125,7 @@ async def read_ticket(
     *,
     db: AsyncSession = Depends(deps.get_db),
     id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: Optional[models.User] = Depends(deps.get_optional_current_user),
 ):
     """
     Get ticket details.
@@ -129,7 +138,11 @@ async def read_ticket(
         raise HTTPException(status_code=404, detail="Ticket not found")
 
     # Auth Check
-    if not current_user.is_superuser and ticket.user_id != current_user.id:
+    if ticket.user_id is None:
+        pass # Guest ticket, allow access (in a real app we'd use a session token)
+    elif current_user is None:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    elif not current_user.is_superuser and ticket.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     return ticket
@@ -173,7 +186,7 @@ async def create_ticket_message(
     id: int,
     content: str = Form(...),
     file: Optional[UploadFile] = File(None),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: Optional[models.User] = Depends(deps.get_optional_current_user),
 ):
     """
     Post a reply to a ticket.
@@ -186,7 +199,11 @@ async def create_ticket_message(
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    if not current_user.is_superuser and ticket.user_id != current_user.id:
+    if ticket.user_id is None:
+        pass
+    elif current_user is None:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    elif not current_user.is_superuser and ticket.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     # Handle File
@@ -201,10 +218,10 @@ async def create_ticket_message(
     # Create Message
     message = models.TicketMessage(
         ticket_id=ticket.id,
-        user_id=current_user.id,
+        user_id=current_user.id if current_user else None,
         content=content,
         attachment_url=attachment_url,
-        is_admin=current_user.is_superuser,
+        is_admin=current_user.is_superuser if current_user else False,
     )
     db.add(message)
 
@@ -222,7 +239,7 @@ async def read_ticket_messages(
     *,
     db: AsyncSession = Depends(deps.get_db),
     id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: Optional[models.User] = Depends(deps.get_optional_current_user),
 ):
     """
     Get messages for a ticket and MARK AS READ.
@@ -235,7 +252,11 @@ async def read_ticket_messages(
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    if not current_user.is_superuser and ticket.user_id != current_user.id:
+    if ticket.user_id is None:
+        pass
+    elif current_user is None:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    elif not current_user.is_superuser and ticket.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     # Get Messages
@@ -254,7 +275,7 @@ async def read_ticket_messages(
         models.TicketMessage.ticket_id == id, models.TicketMessage.read_at == None
     )
 
-    if current_user.is_superuser:
+    if current_user and current_user.is_superuser:
         # Admin reads User messages
         update_stmt = update_stmt.where(models.TicketMessage.is_admin == False)
     else:

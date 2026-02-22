@@ -33,15 +33,25 @@ export default function SupportWidget() {
     const [view, setView] = useState<'list' | 'create' | 'chat'>('list')
     const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
 
+    const [guestTicketIds, setGuestTicketIds] = useState<number[]>(() => {
+        const stored = localStorage.getItem('guest_tickets')
+        return stored ? JSON.parse(stored) : []
+    })
+
     // Fetch Tickets
     const { data: tickets, isLoading } = useQuery({
-        queryKey: ['tickets'],
+        queryKey: ['tickets', user ? 'auth' : 'guest', guestTicketIds],
         queryFn: async () => {
-            if (!user) return []
-            const res = await axios.get('/api/v1/tickets/')
-            return res.data as Ticket[]
+            if (user) {
+                const res = await axios.get('/api/v1/tickets/')
+                return res.data as Ticket[]
+            } else {
+                if (guestTicketIds.length === 0) return []
+                const res = await axios.get('/api/v1/tickets/', { params: { guest_ids: guestTicketIds.join(',') }})
+                return res.data as Ticket[]
+            }
         },
-        enabled: !!user && isOpen,
+        enabled: isOpen,
         refetchInterval: isOpen ? 5000 : false
     })
 
@@ -85,32 +95,28 @@ export default function SupportWidget() {
 
                     {/* Content */}
                     <div className="flex-1 overflow-hidden relative">
-                        {!user ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                                <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mb-4">
-                                    <MessageCircle className="w-8 h-8 text-primary opacity-50" />
-                                </div>
-                                <h4 className="text-foreground font-bold mb-2">Have a question?</h4>
-                                <p className="text-sm text-gray-400 mb-6">Sign in to your account to contact our support team and track your requests.</p>
-                                <Link to="/login" onClick={() => setIsOpen(false)} className="w-full">
-                                    <Button className="w-full rounded-xl">Sign In</Button>
-                                </Link>
-                            </div>
-                        ) : isLoading && view === 'list' ? (
+                        {isLoading && view === 'list' ? (
                             <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
                         ) : (
                             <>
-                                {view === 'list' && tickets && (
+                                {view === 'list' && (
                                     <TicketList 
-                                        tickets={tickets} 
+                                        tickets={tickets || []} 
                                         onSelect={(id) => { setSelectedTicketId(id); setView('chat') }}
                                         onCreate={() => setView('create')}
                                     />
                                 )}
                                 {view === 'create' && (
                                     <CreateTicket 
-                                        onSuccess={() => setView('list')}
-                                        onCancel={() => setView('list')}
+                                        onSuccess={(newTicketId) => {
+                                            if (!user && newTicketId) {
+                                                const updated = [...guestTicketIds, newTicketId]
+                                                setGuestTicketIds(updated)
+                                                localStorage.setItem('guest_tickets', JSON.stringify(updated))
+                                            }
+                                            setView('list')
+                                        }} 
+                                        onCancel={() => setView('list')} 
                                     />
                                 )}
                                 {view === 'chat' && selectedTicketId && (
@@ -194,22 +200,23 @@ function TicketList({ tickets, onSelect, onCreate }: { tickets: Ticket[], onSele
     )
 }
 
-function CreateTicket({ onSuccess, onCancel }: { onSuccess: () => void, onCancel: () => void }) {
+function CreateTicket({ onSuccess, onCancel }: { onSuccess: (id?: number) => void, onCancel: () => void }) {
     const [subject, setSubject] = useState('')
     const [message, setMessage] = useState('')
     const queryClient = useQueryClient()
 
     const mutation = useMutation({
         mutationFn: async () => {
-            await axios.post('/api/v1/tickets/', { 
+            const res = await axios.post('/api/v1/tickets/', { 
                 subject, 
                 initial_message: message,
                 priority: 'normal'
             })
+            return res.data
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['tickets'] })
-            onSuccess()
+            onSuccess(data.id)
         }
     })
 

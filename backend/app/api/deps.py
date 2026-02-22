@@ -78,3 +78,31 @@ def get_current_active_superuser(
             detail="The user doesn't have enough privileges",
         )
     return current_user
+
+async def get_optional_current_user(
+    request: Request, db: AsyncSession = Depends(get_db)
+) -> Optional[User]:
+    token = request.cookies.get("access_token")
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+
+    if not token:
+        return None
+
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+    except JWTError:
+        return None
+
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if not user or not user.is_active:
+        return None
+    return user
