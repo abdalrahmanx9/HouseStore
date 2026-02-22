@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { Badge } from './ui/Badge'
 
@@ -47,7 +47,7 @@ export default function SupportWidget() {
 
     const unreadCount = tickets?.filter(t => t.has_unread_messages).length || 0
 
-    if (!user || pathname.startsWith('/admin')) return null
+    if (pathname.startsWith('/admin')) return null
 
     return (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -85,7 +85,18 @@ export default function SupportWidget() {
 
                     {/* Content */}
                     <div className="flex-1 overflow-hidden relative">
-                        {isLoading && view === 'list' ? (
+                        {!user ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                                <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mb-4">
+                                    <MessageCircle className="w-8 h-8 text-primary opacity-50" />
+                                </div>
+                                <h4 className="text-foreground font-bold mb-2">Have a question?</h4>
+                                <p className="text-sm text-gray-400 mb-6">Sign in to your account to contact our support team and track your requests.</p>
+                                <Link to="/login" onClick={() => setIsOpen(false)} className="w-full">
+                                    <Button className="w-full rounded-xl">Sign In</Button>
+                                </Link>
+                            </div>
+                        ) : isLoading && view === 'list' ? (
                             <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
                         ) : (
                             <>
