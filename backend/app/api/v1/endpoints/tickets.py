@@ -5,7 +5,7 @@ from sqlalchemy import select, func, update
 import os
 import aiofiles
 
-from app import crud, models, schemas
+from app import models, schemas
 from app.api import deps
 
 router = APIRouter()
@@ -57,6 +57,7 @@ async def create_ticket(
 async def read_tickets(
     skip: int = 0,
     limit: int = 100,
+    guest_ids: Optional[str] = None,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Optional[models.User] = Depends(deps.get_optional_current_user),
 ):
@@ -81,7 +82,7 @@ async def read_tickets(
         ids = [int(i) for i in guest_ids.split(",") if i.isdigit()]
         if not ids:
             return []
-        stmt = stmt.where(models.Ticket.id.in_(ids)).where(models.Ticket.user_id == None)
+        stmt = stmt.where(models.Ticket.id.in_(ids)).where(models.Ticket.user_id.is_(None))
 
     result = await db.execute(stmt)
     tickets = result.scalars().all()
@@ -95,13 +96,13 @@ async def read_tickets(
         # If Admin: check for unread messages from USER (is_admin=False)
         # If User: check for unread messages from ADMIN (is_admin=True)
         unread_stmt = select(models.TicketMessage).where(
-            models.TicketMessage.ticket_id == t.id, models.TicketMessage.read_at == None
+            models.TicketMessage.ticket_id == t.id, models.TicketMessage.read_at.is_(None)
         )
 
         if current_user and current_user.is_superuser:
-            unread_stmt = unread_stmt.where(models.TicketMessage.is_admin == False)
+            unread_stmt = unread_stmt.where(models.TicketMessage.is_admin.is_(False))
         else:
-            unread_stmt = unread_stmt.where(models.TicketMessage.is_admin == True)
+            unread_stmt = unread_stmt.where(models.TicketMessage.is_admin.is_(True))
 
         unread_res = await db.execute(unread_stmt.limit(1))
         has_unread = unread_res.scalar() is not None
@@ -276,15 +277,15 @@ async def read_ticket_messages(
     now = func.now()
 
     update_stmt = update(models.TicketMessage).where(
-        models.TicketMessage.ticket_id == id, models.TicketMessage.read_at == None
+        models.TicketMessage.ticket_id == id, models.TicketMessage.read_at.is_(None)
     )
 
     if current_user and current_user.is_superuser:
         # Admin reads User messages
-        update_stmt = update_stmt.where(models.TicketMessage.is_admin == False)
+        update_stmt = update_stmt.where(models.TicketMessage.is_admin.is_(False))
     else:
         # User reads Admin messages
-        update_stmt = update_stmt.where(models.TicketMessage.is_admin == True)
+        update_stmt = update_stmt.where(models.TicketMessage.is_admin.is_(True))
 
     await db.execute(update_stmt.values(read_at=now))
     await db.commit()

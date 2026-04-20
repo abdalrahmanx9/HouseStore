@@ -9,7 +9,6 @@ from sqlalchemy import (
     BigInteger,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from app.models.base import Base
 

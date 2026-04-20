@@ -167,9 +167,9 @@ async def read_orders(
         )
 
         if current_user.is_superuser:
-            unread_stmt = unread_stmt.where(models.order.Message.is_admin == False)
+            unread_stmt = unread_stmt.where(models.order.Message.is_admin.is_(False))
         else:
-            unread_stmt = unread_stmt.where(models.order.Message.is_admin == True)
+            unread_stmt = unread_stmt.where(models.order.Message.is_admin.is_(True))
 
         unread_res = await db.execute(unread_stmt.limit(1))
         has_unread = unread_res.scalar() is not None
@@ -291,10 +291,10 @@ async def read_messages(
 
     if current_user.is_superuser:
         # Admin reads User messages
-        update_stmt = update_stmt.where(models.order.Message.is_admin == False)
+        update_stmt = update_stmt.where(models.order.Message.is_admin.is_(False))
     else:
         # User reads Admin messages
-        update_stmt = update_stmt.where(models.order.Message.is_admin == True)
+        update_stmt = update_stmt.where(models.order.Message.is_admin.is_(True))
 
     await db.execute(update_stmt.values(read_at=now))
     await db.commit()

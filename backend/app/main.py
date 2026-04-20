@@ -4,6 +4,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from fastapi.staticfiles import StaticFiles
+import os
 
 from app.core import config
 from app.api.v1.api import api_router
@@ -25,11 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-from fastapi.staticfiles import StaticFiles
-import os
-
-# ... imports ...
 
 app.include_router(api_router, prefix=config.settings.API_V1_STR)
 

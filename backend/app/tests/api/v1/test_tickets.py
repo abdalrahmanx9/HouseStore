@@ -78,7 +78,7 @@ async def test_ticket_flow_real(client: AsyncClient, db: AsyncSession):
     assert res.status_code == 200
     reply = res.json()
     assert reply["content"] == "Admin reply here"
-    assert reply["is_admin"] == True
+    assert reply["is_admin"]
 
     # User verifies reply
     app.dependency_overrides[deps.get_current_active_user] = mock_user

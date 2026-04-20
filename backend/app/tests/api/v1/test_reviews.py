@@ -61,7 +61,7 @@ async def test_create_and_read_reviews(client: AsyncClient):
     assert review["product_id"] == product_id
     assert review["rating"] == 5
     assert review["comment"] == "Amazing product! Highly recommended."
-    assert review["is_verified_purchase"] == False  # No order created
+    assert not review["is_verified_purchase"]
 
     # 3. Get Reviews for Product
     response = await client.get(f"{settings.API_V1_STR}/reviews/product/{product_id}")

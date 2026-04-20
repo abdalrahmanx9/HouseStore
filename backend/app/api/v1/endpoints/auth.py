@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
