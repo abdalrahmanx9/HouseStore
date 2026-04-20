@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { Trash, Tag, X, ShoppingBag, Store } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
 
 export default function CartPage() {
   const { cart: items, removeFromCart, updateQuantity } = useCart()
@@ -28,7 +28,7 @@ export default function CartPage() {
           setCouponCode('')
       } catch (err: unknown) {
           setAppliedCoupon(null)
-          setCouponError((err as any)?.response?.data?.detail || 'Invalid coupon')
+          setCouponError((err as AxiosError<{ detail: string }>)?.response?.data?.detail || 'Invalid coupon')
       }
   }
 

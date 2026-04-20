@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { LogIn, UserPlus, Store, Mail, Lock, User } from 'lucide-react'
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -51,7 +51,7 @@ export default function LoginPage() {
         setError('Account created! Please sign in.')
       }
     } catch (err: unknown) {
-      setError((err as any)?.response?.data?.detail || 'An error occurred')
+      setError((err as AxiosError<{ detail: string }>)?.response?.data?.detail || 'An error occurred')
     } finally {
       setIsLoading(false)
     }

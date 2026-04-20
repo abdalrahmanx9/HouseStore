@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -102,8 +102,8 @@ export default function Checkout() {
          toast.success('Order placed successfully! 🎉')
          navigate('/order-success')
     } catch (error: unknown) {
-        console.error("Order failed", (error as any)?.response?.data || error)
-         toast.error((error as any)?.response?.data?.detail || 'Failed to place order. Please try again.')
+        console.error("Order failed", (error as AxiosError)?.response?.data || error)
+         toast.error((error as AxiosError<{ detail: string }>)?.response?.data?.detail || 'Failed to place order. Please try again.')
     } finally {
         setIsSubmitting(false)
     }
