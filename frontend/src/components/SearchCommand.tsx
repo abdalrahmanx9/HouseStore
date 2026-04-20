@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -10,9 +11,6 @@ import type { Product } from '../types'
 // read or control the search modal state.
 // ---------------------------------------------------------------------------
 
-let globalOpen: () => void = () => {}
-let globalClose: () => void = () => {}
-
 export function useSearchShortcut() {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -20,9 +18,10 @@ export function useSearchShortcut() {
   const close = useCallback(() => setIsOpen(false), [])
 
   // Expose to the module-level helpers so SearchCommand can drive the state
+   
   useEffect(() => {
-    globalOpen = open
-    globalClose = close
+    // globalOpen = open
+    // globalClose = close
   }, [open, close])
 
   useEffect(() => {
@@ -58,6 +57,7 @@ export default function SearchCommand() {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Reset state when modal opens / closes
+   
   useEffect(() => {
     if (isOpen) {
       setQuery('')
@@ -95,7 +95,7 @@ export default function SearchCommand() {
           cancelToken: source.token,
         })
         .then((res) => {
-          const data = Array.isArray(res.data) ? res.data : (res.data as any).items ?? []
+          const data = Array.isArray(res.data) ? res.data : (res.data as { items?: Product[] }).items ?? []
           setResults(data)
           setHasSearched(true)
           setIsLoading(false)

@@ -33,8 +33,9 @@ export default function UserList() {
             queryClient.invalidateQueries({ queryKey: ['admin-users'] })
             toast.success('User status updated')
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.detail || 'Failed to update user')
+        onError: (err: unknown) => {
+            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+            toast.error(detail || 'Failed to update user')
         }
     })
 
@@ -46,8 +47,9 @@ export default function UserList() {
             queryClient.invalidateQueries({ queryKey: ['admin-users'] })
             toast.success('User role updated')
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.detail || 'Failed to update user role')
+        onError: (err: unknown) => {
+            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+            toast.error(detail || 'Failed to update user role')
         }
     })
 

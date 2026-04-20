@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useLocation, Link } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { Badge } from './ui/Badge'
 

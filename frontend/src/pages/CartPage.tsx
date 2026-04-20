@@ -26,7 +26,7 @@ export default function CartPage() {
           const res = await axios.post('/api/v1/coupons/validate', null, { params: { code: couponCode } })
           setAppliedCoupon(res.data)
           setCouponCode('')
-      } catch (err: any) {
+      } catch (err: unknown) {
           setAppliedCoupon(null)
           setCouponError(err.response?.data?.detail || 'Invalid coupon')
       }

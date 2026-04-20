@@ -6,9 +6,12 @@ export default function LoadingBar() {
   const location = useLocation()
 
   useEffect(() => {
-    setLoading(true)
-    const timeout = setTimeout(() => setLoading(false), 500)
-    return () => clearTimeout(timeout)
+    const t1 = setTimeout(() => setLoading(true), 0)
+    const t2 = setTimeout(() => setLoading(false), 500)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
   }, [location.pathname])
 
   if (!loading) return null

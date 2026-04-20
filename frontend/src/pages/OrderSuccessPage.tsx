@@ -2,7 +2,9 @@ import { Link } from 'react-router-dom'
 import { CheckCircle, ArrowRight, Package, Store, Sparkles } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+
+const CONFETTI_COLORS = ['#3b82f6', '#10b981', '#eab308', '#ef4444', '#8b5cf6', '#f97316']
 
 export default function OrderSuccessPage() {
   const [confetti, setConfetti] = useState(true)
@@ -11,6 +13,16 @@ export default function OrderSuccessPage() {
     const timer = setTimeout(() => setConfetti(false), 4000)
     return () => clearTimeout(timer)
   }, [])
+
+  const confettiPositions = useMemo(() =>
+    Array.from({ length: 40 }, () => ({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      rotate: Math.random() * 720,
+      duration: 2 + Math.random() * 2,
+    })),
+    []
+  )
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -27,19 +39,19 @@ export default function OrderSuccessPage() {
                 opacity: 1,
               }}
               animate={{
-                x: `${Math.random() * 100}vw`,
-                y: `${Math.random() * 100}vh`,
+                x: `${confettiPositions[i].x}vw`,
+                y: `${confettiPositions[i].y}vh`,
                 scale: [0, 1, 0.5],
                 opacity: [1, 1, 0],
-                rotate: Math.random() * 720,
+                rotate: confettiPositions[i].rotate,
               }}
               transition={{
-                duration: 2 + Math.random() * 2,
+                duration: confettiPositions[i].duration,
                 ease: 'easeOut',
               }}
               className="absolute w-3 h-3 rounded-sm"
               style={{
-                backgroundColor: ['#3b82f6', '#10b981', '#eab308', '#ef4444', '#8b5cf6', '#f97316'][i % 6],
+                backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
               }}
             />
           ))}

@@ -20,6 +20,7 @@ export function TypewriterText({
   const [currentText, setCurrentText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
+   
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
 

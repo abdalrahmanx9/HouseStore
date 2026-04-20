@@ -48,8 +48,9 @@ export default function StockManager({ productId, productName, deliveryType = 'm
       toast.success(`Added ${variables.length} stock item${variables.length > 1 ? 's' : ''}`)
       setNewStock('')
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.detail || 'Failed to add stock')
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      toast.error(detail || 'Failed to add stock')
     },
   })
 
@@ -64,8 +65,9 @@ export default function StockManager({ productId, productName, deliveryType = 'm
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Stock item deleted')
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.detail || 'Failed to delete stock item')
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      toast.error(detail || 'Failed to delete stock item')
     },
   })
 

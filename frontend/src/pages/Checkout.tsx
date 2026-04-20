@@ -101,7 +101,7 @@ export default function Checkout() {
          queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
          toast.success('Order placed successfully! 🎉')
          navigate('/order-success')
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Order failed", error.response?.data || error)
          toast.error(error.response?.data?.detail || 'Failed to place order. Please try again.')
     } finally {

@@ -44,6 +44,7 @@ export default function UserDashboard() {
     refetchInterval: 10000 // Poll for new messages/updates
   })
 
+   
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const orderId = params.get('orderId')
@@ -192,7 +193,7 @@ export default function UserDashboard() {
                                       {order.status === 'completed' && (
                                           <Button 
                                               onClick={() => {
-                                                addToCart({ id: order.product_id, name: order.product_name, price: order.amount, category: '', stock_count: 1 } as any)
+                                                addToCart({ id: order.product_id, name: order.product_name, price: order.amount, category: '', stock_count: 1 } as unknown as Parameters<typeof addToCart>[0])
                                                 toast.success(`${order.product_name} added to cart!`)
                                               }}
                                               variant="outline" 

@@ -214,7 +214,7 @@ export default function ProfilePage() {
 
                                 return (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {wishlist.map((item: any) => (
+                                        {wishlist.map((item: { id: number; product: { id: number; name: string; price: number; image_url?: string } }) => (
                                             <Link key={item.id} to={`/products/${item.product.id}`} className="group relative rounded-xl border border-border/50 bg-background/50 overflow-hidden flex items-center hover:border-primary/50 transition-colors">
                                                 {item.product.image_url && (
                                                     <div className="w-20 h-20 shrink-0 bg-surface-hover">

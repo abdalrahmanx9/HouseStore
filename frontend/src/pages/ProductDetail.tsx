@@ -20,7 +20,7 @@ import Breadcrumbs from '../components/Breadcrumbs'
 import RecentlyViewed, { trackProductView } from '../components/RecentlyViewed'
 import { usePageMeta } from '../hooks/usePageMeta'
 
-const CATEGORY_STYLES: Record<string, { gradient: string, Icon: any }> = {
+const CATEGORY_STYLES: Record<string, { gradient: string, Icon: React.ComponentType<{ className?: string; strokeWidth?: number }> }> = {
   'games':        { gradient: 'from-violet-600/30 via-purple-500/20 to-fuchsia-500/10', Icon: Gamepad2 },
   'software':     { gradient: 'from-blue-600/30 via-cyan-500/20 to-teal-500/10',       Icon: Laptop },
   'social media': { gradient: 'from-pink-600/30 via-rose-500/20 to-orange-500/10',      Icon: MessageCircle },

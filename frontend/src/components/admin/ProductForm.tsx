@@ -34,6 +34,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     is_active: true
   })
 
+   
   useEffect(() => {
     if (product) {
         setFormData({

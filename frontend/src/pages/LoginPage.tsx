@@ -50,7 +50,7 @@ export default function LoginPage() {
         setIsLogin(true)
         setError('Account created! Please sign in.')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.response?.data?.detail || 'An error occurred')
     } finally {
       setIsLoading(false)

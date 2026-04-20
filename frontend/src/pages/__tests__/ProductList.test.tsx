@@ -15,7 +15,7 @@ vi.mock('../../context/AuthContext', () => ({
 
 vi.mock('../../context/CartContext', () => ({
   useCart: () => ({ addToCart: vi.fn(), removeFromCart: vi.fn(), cart: [] }),
-  CartProvider: ({ children }: any) => <>{children}</>
+  CartProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
 // IntersectionObserver isn't available in standard jsdom, mock it to allow framer-motion to render correctly
@@ -24,7 +24,7 @@ class IntersectionObserverMock {
     unobserve = vi.fn()
     disconnect = vi.fn()
 }
-window.IntersectionObserver = IntersectionObserverMock as any
+window.IntersectionObserver = IntersectionObserverMock as unknown as typeof window.IntersectionObserver
 
 const server = setupServer(
   http.get('/api/v1/products/', () => {

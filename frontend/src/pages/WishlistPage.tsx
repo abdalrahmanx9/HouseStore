@@ -54,7 +54,7 @@ export default function WishlistPage() {
       image_url: item.product.image_url,
       category: item.product.category,
       stock_count: item.product.stock_count,
-    } as any);
+    } as Parameters<typeof addToCart>[0]);
     toast.success(`${item.product.name} added to cart`);
   };
 

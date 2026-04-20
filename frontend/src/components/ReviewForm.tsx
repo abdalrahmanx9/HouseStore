@@ -31,8 +31,9 @@ export default function ReviewForm({ productId, orderId, onSuccess }: ReviewForm
             toast.success('Review submitted successfully!')
             if (onSuccess) onSuccess()
         },
-        onError: (err: any) => {
-            setError(err.response?.data?.detail || 'Failed to submit review')
+        onError: (err: unknown) => {
+            const error = err as { response?: { data?: { detail?: string } } }
+            setError(error.response?.data?.detail || 'Failed to submit review')
         }
     })
 
@@ -43,7 +44,7 @@ export default function ReviewForm({ productId, orderId, onSuccess }: ReviewForm
             return
         }
         setError('')
-        submitMutation.mutate({ product_id: productId, order_id: orderId, rating, comment } as any)
+        submitMutation.mutate({ product_id: productId, order_id: orderId, rating, comment } as unknown as ReviewCreate)
     }
 
     return (

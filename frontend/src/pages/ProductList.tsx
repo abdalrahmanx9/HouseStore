@@ -64,6 +64,7 @@ export default function ProductList() {
     description: 'Discover premium software, games, and digital assets at House Store. Secure checkout, instant delivery.',
   })
 
+   
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const cat = params.get('category')
@@ -103,6 +104,7 @@ export default function ProductList() {
   }, [products, selectedCategory, searchQuery, sortBy]);
 
   // Reset pagination when filters change
+   
   useEffect(() => {
     setVisibleCount(12)
   }, [selectedCategory, searchQuery, sortBy])

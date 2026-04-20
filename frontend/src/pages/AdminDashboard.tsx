@@ -151,7 +151,7 @@ export default function AdminDashboard() {
   })
 
   // Queries
-  const { data: stats } = useQuery({
+  useQuery({
     queryKey: ['admin-stats'],
     queryFn: fetchStats,
     refetchInterval: 30000,
@@ -175,6 +175,7 @@ export default function AdminDashboard() {
       enabled: activeTab === 'reviews'
   })
 
+   
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const orderId = params.get('orderId')

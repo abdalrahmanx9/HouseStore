@@ -18,6 +18,7 @@ export function Navbar() {
   const location = useLocation()
   
   // Close mobile menu on navigation
+   
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [location.pathname])

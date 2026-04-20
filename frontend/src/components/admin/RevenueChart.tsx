@@ -68,8 +68,8 @@ export default function RevenueChart() {
               fontSize: '12px',
               color: 'var(--foreground)',
             }}
-            formatter={(value: any) => [`${Number(value).toFixed(2)} EGP`, 'Revenue']}
-            labelFormatter={(label: any) => new Date(label).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}
+            formatter={(value: unknown) => [`${Number(value).toFixed(2)} EGP`, 'Revenue']}
+            labelFormatter={(label: unknown) => new Date(String(label)).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}
           />
           <Area
             type="monotone"

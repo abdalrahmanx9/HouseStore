@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, ChevronRight } from 'lucide-react'
@@ -17,7 +18,9 @@ export function trackProductView(product: Product) {
     // Keep max items
     items = items.slice(0, MAX_ITEMS)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {}
+  } catch {
+      // ignore parse error
+    }
 }
 
 export default function RecentlyViewed() {
@@ -26,8 +29,11 @@ export default function RecentlyViewed() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
+       
       if (stored) setProducts(JSON.parse(stored))
-    } catch {}
+    } catch {
+      // ignore
+    }
   }, [])
 
   if (products.length === 0) return null
