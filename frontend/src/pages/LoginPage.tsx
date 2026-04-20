@@ -51,7 +51,7 @@ export default function LoginPage() {
         setError('Account created! Please sign in.')
       }
     } catch (err: unknown) {
-      setError(err.response?.data?.detail || 'An error occurred')
+      setError((err as any)?.response?.data?.detail || 'An error occurred')
     } finally {
       setIsLoading(false)
     }

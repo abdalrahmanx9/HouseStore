@@ -28,7 +28,7 @@ export default function CartPage() {
           setCouponCode('')
       } catch (err: unknown) {
           setAppliedCoupon(null)
-          setCouponError(err.response?.data?.detail || 'Invalid coupon')
+          setCouponError((err as any)?.response?.data?.detail || 'Invalid coupon')
       }
   }
 

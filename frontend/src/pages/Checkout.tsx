@@ -102,8 +102,8 @@ export default function Checkout() {
          toast.success('Order placed successfully! 🎉')
          navigate('/order-success')
     } catch (error: unknown) {
-        console.error("Order failed", error.response?.data || error)
-         toast.error(error.response?.data?.detail || 'Failed to place order. Please try again.')
+        console.error("Order failed", (error as any)?.response?.data || error)
+         toast.error((error as any)?.response?.data?.detail || 'Failed to place order. Please try again.')
     } finally {
         setIsSubmitting(false)
     }
