@@ -50,6 +50,7 @@ async def test_create_and_read_reviews(client: AsyncClient):
 
     review_data = {
         "product_id": product_id,
+        "order_id": 1,
         "rating": 5,
         "comment": "Amazing product! Highly recommended.",
     }

@@ -26,6 +26,7 @@ async def test_ticket_flow_real(client: AsyncClient, db: AsyncSession):
         return User(id=user_id, email=email, is_active=True, is_superuser=False)
 
     app.dependency_overrides[deps.get_current_active_user] = mock_user
+    app.dependency_overrides[deps.get_optional_current_user] = mock_user
 
     # Create Ticket
     ticket_data = {

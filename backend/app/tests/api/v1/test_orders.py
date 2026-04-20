@@ -4,26 +4,26 @@ from app.core.config import settings
 from app.main import app
 from app.api import deps
 from app.models.user import User
+from app.models.base import Base
+from sqlalchemy import select
 import json
 
 
 @pytest.mark.asyncio
-async def test_create_order(client: AsyncClient):
-    # Mock authenticated user
+async def test_create_order(client: AsyncClient, db):
+    user_id = 1
+    user = User(id=user_id, email="testuser@example.com", is_active=True, is_superuser=False)
+    db.add(user)
+    await db.commit()
+
     async def mock_get_current_active_user():
         return User(
-            id=1, email="testuser@example.com", is_active=True, is_superuser=False
+            id=user_id, email="testuser@example.com", is_active=True, is_superuser=False
         )
 
     app.dependency_overrides[deps.get_current_active_user] = (
         mock_get_current_active_user
     )
-
-    # Create a product first
-    # Need admin auth for product creation?
-    # endpoints/products.py says "TODO: Admin check", so it might be open.
-    # But let's check creating it directly or via endpoint.
-    # test_products.py used endpoint.
 
     product_data = {
         "name": "Order Test Product",
@@ -34,12 +34,8 @@ async def test_create_order(client: AsyncClient):
         "is_active": True,
     }
 
-    # We might need to mock get_current_user for product creation if it uses different dependency
-    # endpoints/products.py likely uses get_current_active_superuser?
-    # Let's check products.py first? No, I'll gamble on it being open or generic user.
-    # Actually, let's mock superuser too just in case.
     async def mock_get_current_active_superuser():
-        return User(id=1, email="admin@example.com", is_active=True, is_superuser=True)
+        return User(id=999, email="admin@example.com", is_active=True, is_superuser=True)
 
     app.dependency_overrides[deps.get_current_active_superuser] = (
         mock_get_current_active_superuser
@@ -49,8 +45,6 @@ async def test_create_order(client: AsyncClient):
     assert prod_res.status_code == 200
     product_id = prod_res.json()["id"]
 
-    # Now create order
-    # Endpoint expects Form data and File
     cart_items = [{"id": product_id, "quantity": 2}]
 
     files = {"payment_proof": ("proof.png", b"fake image data", "image/png")}
@@ -67,19 +61,20 @@ async def test_create_order(client: AsyncClient):
 
     assert response.status_code == 200
     orders = response.json()
-    assert len(orders) == 2  # Quantity 2
+    assert len(orders) == 2
     assert orders[0]["product_id"] == product_id
     assert orders[0]["amount"] == 100.0
     assert orders[0]["status"] == "pending"
 
-    # Clean up
     app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
-async def test_read_orders(client: AsyncClient):
-    # Mock User and Superuser
+async def test_read_orders(client: AsyncClient, db):
     user_id = 1
+    user = User(id=user_id, email="user@example.com", is_active=True, is_superuser=False)
+    db.add(user)
+    await db.commit()
 
     async def mock_user():
         return User(
@@ -93,7 +88,6 @@ async def test_read_orders(client: AsyncClient):
 
     app.dependency_overrides[deps.get_current_active_superuser] = mock_superuser
 
-    # Create Product
     product_data = {
         "name": "Read Order Test Product",
         "description": "Test Desc",
@@ -106,7 +100,6 @@ async def test_read_orders(client: AsyncClient):
     assert prod_res.status_code == 200
     product_id = prod_res.json()["id"]
 
-    # Create Order
     cart_items = [{"id": product_id, "quantity": 1}]
     files = {"payment_proof": ("proof.png", b"fake image data", "image/png")}
     data = {
@@ -116,18 +109,15 @@ async def test_read_orders(client: AsyncClient):
         "email": "buyer@example.com",
     }
 
-    # Post order
     res = await client.post(f"{settings.API_V1_STR}/orders/", data=data, files=files)
     assert res.status_code == 200
 
-    # List orders
     response = await client.get(f"{settings.API_V1_STR}/orders/")
     assert response.status_code == 200
     orders = response.json()
     assert isinstance(orders, list)
     assert len(orders) >= 1
 
-    # Verify the created order is in the list
     created_order_id = res.json()[0]["id"]
     found = any(o["id"] == created_order_id for o in orders)
     assert found
