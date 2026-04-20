@@ -11,10 +11,11 @@ import json
 
 @pytest.mark.asyncio
 async def test_create_order(client: AsyncClient, db):
-    user_id = 1
-    user = User(id=user_id, email="testuser@example.com", is_active=True, is_superuser=False)
+    user = User(email="testuser@example.com", is_active=True, is_superuser=False)
     db.add(user)
     await db.commit()
+    await db.refresh(user)
+    user_id = user.id
 
     async def mock_get_current_active_user():
         return User(
@@ -71,10 +72,11 @@ async def test_create_order(client: AsyncClient, db):
 
 @pytest.mark.asyncio
 async def test_read_orders(client: AsyncClient, db):
-    user_id = 1
-    user = User(id=user_id, email="user@example.com", is_active=True, is_superuser=False)
+    user = User(email="user@example.com", is_active=True, is_superuser=False)
     db.add(user)
     await db.commit()
+    await db.refresh(user)
+    user_id = user.id
 
     async def mock_user():
         return User(
