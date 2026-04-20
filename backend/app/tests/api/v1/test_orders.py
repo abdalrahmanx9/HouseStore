@@ -4,8 +4,7 @@ from app.core.config import settings
 from app.main import app
 from app.api import deps
 from app.models.user import User
-from app.models.base import Base
-from sqlalchemy import select
+
 import json
 
 

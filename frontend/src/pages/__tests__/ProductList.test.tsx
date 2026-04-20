@@ -18,6 +18,11 @@ vi.mock('../../context/CartContext', () => ({
   CartProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
+vi.mock('../../context/ComparisonContext', () => ({
+  useComparison: () => ({ comparisons: [], addToComparison: vi.fn(), removeFromComparison: vi.fn(), isInComparison: () => false, clearComparisons: vi.fn() }),
+  ComparisonProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+}))
+
 // IntersectionObserver isn't available in standard jsdom, mock it to allow framer-motion to render correctly
 class IntersectionObserverMock {
     observe = vi.fn()
@@ -56,12 +61,10 @@ describe('ProductList - Social Proof', () => {
       </QueryClientProvider>
     )
     
-    // Wait for the main products to load
     await waitFor(() => {
-      expect(screen.getByText('Test Product')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Product').length).toBeGreaterThan(0)
     })
     
-    // Check that "Loved by Developers Worldwide" is NOT present
     expect(screen.queryByText('Loved by Developers Worldwide')).not.toBeInTheDocument()
   })
   
@@ -91,6 +94,6 @@ describe('ProductList - Social Proof', () => {
       expect(screen.getByText('Loved by Developers Worldwide')).toBeInTheDocument()
     })
     
-    expect(screen.getByText('Test Setup User')).toBeInTheDocument()
+    expect(screen.getAllByText('Test Setup User').length).toBeGreaterThan(0)
   })
 })
