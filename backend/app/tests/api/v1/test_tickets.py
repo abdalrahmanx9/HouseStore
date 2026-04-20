@@ -55,7 +55,9 @@ async def test_ticket_flow_real(client: AsyncClient, db: AsyncSession):
     assert len(messages) == 1
     assert messages[0]["content"] == "My first message"
 
-    app.dependency_overrides.clear()
+    for key in list(app.dependency_overrides.keys()):
+        if key not in (deps.get_db,):
+            del app.dependency_overrides[key]
 
     # Admin replies
     # Need to create Admin user too?
@@ -70,6 +72,7 @@ async def test_ticket_flow_real(client: AsyncClient, db: AsyncSession):
         return User(id=admin_id, email=admin_email, is_active=True, is_superuser=True)
 
     app.dependency_overrides[deps.get_current_active_user] = mock_superuser
+    app.dependency_overrides[deps.get_optional_current_user] = mock_superuser
 
     # Post as form data
     res = await client.post(
