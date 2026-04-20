@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storeweb
+  labels:
+    app.kubernetes.io/name: storeweb
+    app.kubernetes.io/managed-by: kubectl

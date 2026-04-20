@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: storeweb-config
+  namespace: storeweb
+data:
+  POSTGRES_SERVER: "postgres.default.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "storeweb_db"
+  API_URL: "http://storeweb-backend:8000"
+  FRONTEND_URL: "http://storeweb-frontend:5173"

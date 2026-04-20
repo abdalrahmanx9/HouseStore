@@ -28,6 +28,7 @@ class TicketMessage(TicketMessageBase):
 class TicketBase(BaseModel):
     subject: str
     priority: str = "normal"
+    guest_email: Optional[str] = None
 
 
 class TicketCreate(TicketBase):
@@ -41,7 +42,7 @@ class TicketUpdate(BaseModel):
 
 class Ticket(TicketBase):
     id: int
-    user_id: int
+    user_id: Optional[int] = None
     status: str
     created_at: datetime
     updated_at: Optional[datetime]

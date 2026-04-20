@@ -25,9 +25,13 @@ async def create_ticket(
     """
     Create a new support ticket.
     """
+    if not current_user and not ticket_in.guest_email:
+        raise HTTPException(status_code=400, detail="Guest email is required to open a support ticket")
+
     # 1. Create Ticket
     ticket = models.Ticket(
         user_id=current_user.id if current_user else None,
+        guest_email=ticket_in.guest_email if not current_user else None,
         subject=ticket_in.subject,
         priority=ticket_in.priority,
         status="open",

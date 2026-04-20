@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  kubernetesCluster.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "uid": "kubernetes-cluster",
+        "title": "Kubernetes Cluster Overview",
+        "tags": ["kubernetes"],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 0,
+        "refresh": "10s",
+        "panels": [
+          {
+            "id": 1,
+            "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+            "type": "graph",
+            "title": "CPU Usage",
+            "targets": [
+              {
+                "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"storeweb\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}}"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+            "type": "graph",
+            "title": "Memory Usage",
+            "targets": [
+              {
+                "expr": "sum(container_memory_working_set_bytes{namespace=\"storeweb\"}) by (pod)",
+                "legendFormat": "{{pod}}"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+            "type": "graph",
+            "title": "Request Latency (ms)",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{namespace=\"storeweb\"}[5m])) by (le))",
+                "legendFormat": "p99"
+              },
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"storeweb\"}[5m])) by (le))",
+                "legendFormat": "p95"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+            "type": "graph",
+            "title": "HTTP Request Rate",
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{namespace=\"storeweb\"}[5m])) by (pod, method, status)",
+                "legendFormat": "{{pod}} - {{method}} - {{status}}"
+              }
+            ]
+          }
+        ]
+      }
+    }
