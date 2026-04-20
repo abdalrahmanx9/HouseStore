@@ -12,7 +12,7 @@ class ReviewBase(BaseModel):
 # Properties to receive on creation
 class ReviewCreate(ReviewBase):
     product_id: int
-    order_id: int
+    order_id: Optional[int] = None
 
 
 # Properties to receive on update

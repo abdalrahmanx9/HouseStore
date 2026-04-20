@@ -15,6 +15,7 @@ class Ticket(Base):
     subject = Column(String, nullable=False)
     status = Column(String, default="open", index=True)  # open, closed
     priority = Column(String, default="normal")  # low, normal, high
+    guest_email = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
